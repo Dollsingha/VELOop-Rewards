@@ -28,9 +28,10 @@ app.use(cors({
 app.use(express.json({ limit: "32kb", strict: true }));
 
 const testMode = process.env.NODE_ENV === "test";
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: testMode ? 1000 : 20, standardHeaders: "draft-8", legacyHeaders: false });
-const withdrawalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: testMode ? 1000 : 10, standardHeaders: "draft-8", legacyHeaders: false });
-const walletLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: testMode ? 1000 : 60, standardHeaders: "draft-8", legacyHeaders: false });
+const productionMode = process.env.NODE_ENV === "production";
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: testMode ? 1000 : productionMode ? 20 : 120, standardHeaders: "draft-8", legacyHeaders: false });
+const withdrawalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: testMode ? 1000 : productionMode ? 10 : 30, standardHeaders: "draft-8", legacyHeaders: false });
+const walletLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: testMode ? 1000 : productionMode ? 60 : 300, standardHeaders: "draft-8", legacyHeaders: false });
 
 app.get("/api/health", (_req, res) => {
   res.json({ success: true, service: "veloop-wallet-api", status: "ok" });
@@ -65,3 +66,4 @@ app.use((err, _req, res, _next) => {
 });
 
 export default app;
+
