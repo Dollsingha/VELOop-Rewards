@@ -1,0 +1,22 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: veloop-wallet-mongodb
+    restart: unless-stopped
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - veloop_mongodb_data:/data/db
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --eval 'try { rs.status().ok } catch (e) {
+          rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]}) }'
+      interval: 5s
+      timeout: 10s
+      retries: 15
+
+volumes:
+  veloop_mongodb_data:
