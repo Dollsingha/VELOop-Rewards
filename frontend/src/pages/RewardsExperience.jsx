@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api.js";
+import GoogleIdentityButton from "../components/GoogleIdentityButton.jsx";
 
 const number = value => Number(value || 0).toLocaleString("en-IN");
 const formatDate = value => value ? new Date(value).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
@@ -56,13 +57,14 @@ function MinePreview() {
   </section>;
 }
 
-export default function RewardsExperience() {
+export default function RewardsExperience({ dashboardOnly = false }) {
   const navigate = useNavigate();
   const [authenticated, setAuthenticated] = useState(Boolean(localStorage.getItem("veloop_token")));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
@@ -212,9 +214,24 @@ export default function RewardsExperience() {
       setPassword("");
       navigate("/wallet#wallet");
     } catch (error) {
-      setLoginError(error.response?.data?.message || "Login failed. Check your details and try again.");
+      setLoginError(error.response?.data?.message || "Login failed. Please check your details and try again.");
     } finally { setLoginLoading(false); }
   }
+
+  const signInWithGoogle = useCallback(async credential => {
+    setLoginError("");
+    setGoogleLoading(true);
+    try {
+      const { data } = await api.post("/auth/google", { credential });
+      localStorage.setItem("veloop_token", data.token);
+      setAuthenticated(true);
+      setPassword("");
+      navigate("/wallet#wallet");
+    } catch (error) {
+      setLoginError(error.response?.data?.message || "Google sign-in failed. Please try again.");
+    } finally { setGoogleLoading(false); }
+  }, [navigate]);
+  const showGoogleError = useCallback(message => setLoginError(message), []);
 
   function signOut() {
     localStorage.removeItem("veloop_token");
@@ -247,6 +264,11 @@ export default function RewardsExperience() {
       setPayoutError("Valid payout details are required.");
       return;
     }
+    const upiId = payoutDetails.upiId?.trim();
+    if (method.method === "upi" && upiId && !/^[\w.\-]{2,}@[A-Za-z0-9.\-]{2,}$/.test(upiId)) {
+      setPayoutError("Enter a valid UPI ID, such as name@bank.");
+      return;
+    }
     const cost = Number(option.requiredAmount).toLocaleString("en-IN");
     if (!window.confirm(`Confirm redemption of ${formatPayout(option)} for ${cost} VEs?`)) return;
     requestInFlight.current = true;
@@ -272,14 +294,14 @@ export default function RewardsExperience() {
   }
 
   return <>
-    <main id="home">
-      <section className="hero">
+    <main id="home" className={dashboardOnly ? "dashboard-only" : undefined}>
+      {!dashboardOnly && <section className="hero">
         <div className="hero-content">
           <div className="hero-copy">
             <span className="eyebrow">REWARDS, IN A BETTER LOOP</span>
             <h1>A clearer way to keep <em>good things moving.</em></h1>
             <p>A VELOop Rewards wallet with transparent balances, a traceable activity ledger, and clear payout status.</p>
-            <div className="hero-actions"><a className="hero-primary" href="#wallet">Explore your wallet <span>→</span></a><a className="hero-secondary" href="#login">Member sign in</a></div>
+            <div className="hero-actions"><a className="hero-primary" href="#wallet">Explore your wallet <span>→</span></a><a className="hero-secondary" href="/login">Member sign in</a></div>
             <div className="pill">✳ &nbsp; Backend-connected wallet &nbsp;·&nbsp; Reward rules stay server-side</div>
           </div>
           <div className="hero-showcase" aria-label="Wallet system highlights">
@@ -291,27 +313,31 @@ export default function RewardsExperience() {
           </div>
         </div>
         <b className="orb o1" /><b className="orb o2" />
-      </section>
+      </section>}
 
-      <section className="section" id="login"><div className="heading"><div><small>01 / ACCESS</small><h2>Welcome back.</h2><p>A calm, focused entry to the rewards experience.</p></div><label>LOGIN SCREEN</label></div>
-        <div className="login layout"><div className="art"><div className="coin">V<span>+</span></div><b className="chip">✦ &nbsp; Rewards await</b><div className="artcopy"><strong>Your everyday<br />can go further.</strong><p>One loop. More possibilities.</p></div></div>
-          <div className="form"><div className="brand"><span className="mark">V</span> VELOop</div><small>MEMBER SIGN IN</small><div className="or">SECURE ACCOUNT ACCESS</div><h3>Good to see you.</h3><p>Sign in to view your rewards wallet.</p>
+      {!dashboardOnly && <section className="section auth-inline-section" id="login">
+        <div className="auth-inline-topbar"><a href="#home" aria-label="Back to home">‹</a><span>Login</span></div>
+        <h2 className="auth-inline-title">Login To Your Account</h2>
+        <div className="auth-inline-card">
+          {!authenticated ? <>
+            <div className="auth-inline-google auth-signup-google"><GoogleIdentityButton mode="login" theme="outline" width={184} onCredential={signInWithGoogle} onError={showGoogleError} /></div>
+            {googleLoading && <p className="auth-inline-working" role="status">Verifying your Google account…</p>}
+            <div className="auth-inline-divider"><span>OR</span></div>
             <Notice error={loginError} />
-            {authenticated ? <><div className="signed-in">✓ &nbsp; You’re signed in and your wallet is connected.</div><button type="button" className="button dark wide" onClick={signOut}>Sign out</button><a className="center-link" href="#wallet">View your wallet →</a></> :
-              <form onSubmit={signIn}>
-                <label htmlFor="member-email">Email address</label><input id="member-email" className="design-input" type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} required placeholder="you@example.com" />
-                <label htmlFor="member-password">Password</label><input id="member-password" className="design-input" type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} required placeholder="Enter your password" />
-                <button className="button dark wide" type="submit" disabled={loginLoading}>{loginLoading ? "Signing in…" : "Sign in"}<span>→</span></button>
-                <div className="secure">◈ &nbsp; Your rewards account, kept secure</div>
-              </form>}
-          </div>
+            <form className="auth-inline-form" onSubmit={signIn}>
+              <label htmlFor="member-email">Email :<input id="member-email" type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} required placeholder="Email" /></label>
+              <label htmlFor="member-password">Password :<input id="member-password" type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} required placeholder="Password" /></label>
+              <div className="auth-inline-links"><a href="/register">Don’t have Account? Register</a></div>
+              <button type="submit" disabled={loginLoading || googleLoading}>{loginLoading ? "Signing in…" : "Login"}</button>
+            </form>
+          </> : <div className="auth-inline-signed-in"><b>✓ You’re signed in.</b><p>Your VELOop wallet is ready.</p><a href="#wallet">View wallet →</a><button type="button" onClick={signOut}>Sign out</button></div>}
         </div>
-      </section>
+      </section>}
 
-      <section className="section" id="wallet"><div className="heading"><div><small>02 / YOUR REWARDS</small><h2>Everything in one place.</h2><p>A quick view of your balance and recent activity.</p></div><label>WALLET SCREEN</label></div>
+      <section className={`section${dashboardOnly ? " dashboard-wallet" : ""}`} id="wallet"><div className="heading"><div><small>{dashboardOnly ? "01 / MEMBER DASHBOARD" : "02 / YOUR REWARDS"}</small><h2>{dashboardOnly ? "Your rewards hub." : "Everything in one place."}</h2><p>{dashboardOnly ? "Your balance, daily streak, rewards and activity—all in one place." : "A quick view of your balance and recent activity."}</p></div><label>{dashboardOnly ? "PLAYER DASHBOARD" : "WALLET SCREEN"}</label></div>
         <div className="wallet layout"><aside><div className="brand"><span className="mark">V</span> VELOop</div><small>YOUR SPACE</small><p className="selected"><a href="#wallet">▦ &nbsp; Overview</a></p><p><a href="#activity">↻ &nbsp; Activity</a></p><p><a href="#payout">⇧ &nbsp; Redeem</a></p><div className="account">◉ &nbsp; {authenticated ? "Account secured" : "Sign in to continue"}</div></aside>
           <div className="dash"><div className="dashhead"><span>MEMBER REWARDS OVERVIEW<h3>Your wallet ✳</h3></span><b className="avatar">V</b></div>
-            {!authenticated ? <div className="wallet-gate"><b>Sign in to view your wallet.</b><a href="#login">Go to member sign in →</a></div> : <>
+            {!authenticated ? <div className="wallet-gate"><b>Sign in to view your wallet.</b><a href="/login">Go to member sign in →</a></div> : <>
               <Notice error={walletError} />
               {walletLoading && !wallet && <div className="wallet-gate">Loading your wallet from the VELOop API…</div>}
               <div className="balance"><small>TOTAL REWARD BALANCE</small><strong>{wallet ? number(wallet.ves) : "—"} <i>VEs</i></strong><span>Balance loaded securely from your account.</span><b>V</b></div>
@@ -333,12 +359,13 @@ export default function RewardsExperience() {
               <div className="wallet-requests"><div className="activity"><b>Your payout requests</b><button type="button" disabled={walletLoading} onClick={() => loadWallet(page)}>Refresh status ↻</button></div>
                 {withdrawals.length === 0 ? <p className="wallet-gate">No payout requests yet. Your request status will appear here.</p> : withdrawals.map(item => <div className="row" key={item.withdrawalId}><i className="row-debit">↗</i><span><b>{item.method.toUpperCase()} · {formatDate(item.requestedAt || item.createdAt)}</b><small>{item.withdrawalId}</small></span><strong>{new Intl.NumberFormat("en-IN", { style: "currency", currency: item.payoutCurrency || "INR", maximumFractionDigits: 2 }).format(item.payoutAmount)} · {item.status}</strong></div>)}
               </div>
-              <div className="callout"><b>Ready to redeem?<small>Turn your rewards into something useful.</small></b><a href="#payout" className="button lime">Explore payouts &nbsp; →</a></div>
+              <div className="callout"><b>Ready to redeem?<small>Turn your rewards into something useful.</small></b><a href={dashboardOnly ? "/payout#payout" : "#payout"} className="button lime">Explore payouts &nbsp; →</a></div>
             </>}
           </div>
         </div>
       </section>
 
+      {!dashboardOnly && <>
       <StakePreview />
       <MinePreview />
 
@@ -347,11 +374,11 @@ export default function RewardsExperience() {
         {payoutMessage && <div className="withdrawal-receipt" role="status"><b>Request {withdrawalId}</b><span>Current status: <strong>{withdrawalStatus}</strong> · {withdrawalStatus === "PENDING" ? "Your request is in the review queue." : "Check the wallet for its latest status."}</span><small>No external payout provider is connected to this assessment system.</small></div>}
         <form className="payout layout" onSubmit={submitWithdrawal}>
           <div className="fields"><div className="between"><a href="#wallet">← &nbsp; Wallet</a><small>STEP 1 OF 2</small></div><h3>Choose your reward.</h3><p>Pick an amount to redeem from your VE balance.</p>
-            {!authenticated ? <div className="wallet-gate">Sign in to load payout methods and options. <a href="#login">Go to login →</a></div> : <>
+            {!authenticated ? <div className="wallet-gate">Sign in to load payout methods and options. <a href="/login">Go to login →</a></div> : <>
               <div className="method-list">{methodsLoading ? <div className="wallet-gate">Loading payout methods…</div> : methods.length === 0 ? <div className="wallet-gate">No payout methods are currently available.</div> : methods.map(item => <button className={`method${method?.method === item.method ? " active-method" : ""}`} type="button" key={item.method} onClick={() => chooseMethod(item)}><i>{item.name?.slice(0, 1)?.toUpperCase() || "V"}</i><b>{item.name}<small>Sent securely to your payout details</small></b><span>{method?.method === item.method ? "✓" : ""}</span></button>)}</div>
               <label className="payout-options-label">SELECT AN AMOUNT</label>
               {optionsLoading ? <div className="wallet-gate">Loading payout options…</div> : options.length === 0 ? <div className="wallet-gate">No payout options are available for this method.</div> : <div className="amounts">{options.map(item => <button type="button" className={option?.methodId === item.methodId ? "active" : ""} key={item.methodId} onClick={() => chooseOption(item)} aria-pressed={option?.methodId === item.methodId}>{formatPayout(item)}<small>{number(item.requiredAmount)} VEs</small></button>)}</div>}
-              {method && (method.requiredDetails || []).map(field => <label className="payout-detail-label" key={field.key}>{field.label.toUpperCase()}{field.required ? " *" : ""}<input className="design-input payout-input" required={field.required} type={["email", "tel", "number"].includes(field.inputType) ? field.inputType : "text"} value={payoutDetails[field.key] || ""} autoComplete="off" placeholder={`Enter ${field.label.toLowerCase()}`} onChange={event => { setPayoutDetails(current => ({ ...current, [field.key]: event.target.value })); idempotencyKey.current = null; }} /></label>)}
+              {method && (method.requiredDetails || []).map(field => <label className="payout-detail-label" key={field.key}>{field.label.toUpperCase()}{field.required ? " *" : ""}<input className="design-input payout-input" required={field.required} type={["email", "tel", "number"].includes(field.inputType) ? field.inputType : "text"} pattern={method.method === "upi" && field.key === "upiId" ? "[A-Za-z0-9_.-]{2,}@[A-Za-z0-9.-]{2,}" : undefined} title={method.method === "upi" && field.key === "upiId" ? "Enter a valid UPI ID, such as name@bank." : undefined} value={payoutDetails[field.key] || ""} autoComplete="off" placeholder={`Enter ${field.label.toLowerCase()}`} onChange={event => { setPayoutDetails(current => ({ ...current, [field.key]: event.target.value })); setPayoutError(""); idempotencyKey.current = null; }} /></label>)}
               {method && method.requiredDetails?.length > 0 && <small className="hint">Enter the payout details required for this method.</small>}
               {option && <button className="button dark wide" type="submit" disabled={submitting || Boolean(payoutMessage)}>{submitting ? "Submitting request…" : "Review redemption"}<span>→</span></button>}
               <div className="secure">♧ &nbsp; Your payout details are protected</div>
@@ -359,8 +386,9 @@ export default function RewardsExperience() {
           </div>
           <aside className="summary"><small>REDEMPTION SUMMARY</small>{option ? <><strong>{formatPayout(option)}</strong><p>{method?.name}</p><hr /><div>Rewards to redeem<b>{number(option.requiredAmount)} VEs</b></div><div>Processing fee<b>Not configured</b></div><hr /><div>You’ll receive<b>{formatPayout(option)}</b></div><blockquote>◷ &nbsp; <span><b>Pending review</b><small>Request status appears in your wallet.</small></span></blockquote></> : <div className="summary-empty"><span>✳</span><b>Select a reward</b><small>Your redemption summary appears here.</small></div>}</aside>
         </form>
-      </section>
+      </section></>}
     </main>
     <footer><span className="brand"><span className="mark">V</span> VELOop<span>rewards</span></span><p>Backend-connected wallet · No production payout integration</p><small>VELOOP REWARDS &nbsp; 2026</small></footer>
   </>;
 }
+

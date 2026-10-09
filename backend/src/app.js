@@ -14,7 +14,10 @@ const configuredOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
   .split(",").map(origin => origin.trim()).filter(Boolean);
 const developmentOrigins = process.env.NODE_ENV === "production"
   ? []
-  : ["http://localhost:5173", "http://127.0.0.1:5173"];
+  : [
+      "http://localhost:5173", "http://127.0.0.1:5173",
+      "http://localhost:4173", "http://127.0.0.1:4173"
+    ];
 const allowedOrigins = [...new Set([...configuredOrigins, ...developmentOrigins])];
 
 if (process.env.TRUST_PROXY === "true") app.set("trust proxy", 1);
@@ -70,3 +73,4 @@ app.use((err, _req, res, _next) => {
 });
 
 export default app;
+

@@ -203,6 +203,17 @@ integrationTest("invalid payout option is rejected", async () => {
   assert.match(response.data.message, /Selected payout option is unavailable/);
 });
 
+integrationTest("malformed UPI ID is rejected without debiting the wallet", async () => {
+  const response = await api("/withdrawals", {
+    method: "POST", headers: { "Idempotency-Key": "invalid-upi-request-01" },
+    body: { method: "upi", optionId: "upi_10", payoutDetails: { upiId: "not-a-upi-id" } }
+  });
+  assert.equal(response.status, 400);
+  assert.match(response.data.message, /Invalid UPI ID/);
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 10000);
+  assert.equal(await ids.Withdrawal.countDocuments({ userId: ids.user }), 0);
+});
+
 integrationTest("payout APIs return database-configured form requirements and currency", async () => {
   const methods = await api("/payout/methods");
   assert.equal(methods.status, 200);
@@ -351,3 +362,4 @@ test("payout details are authenticated encrypted at rest", async () => {
   assert.notEqual(encrypted, JSON.stringify(original));
   assert.deepEqual(decryptPayoutDetails(encrypted), original);
 });
+
