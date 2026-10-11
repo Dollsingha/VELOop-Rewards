@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 15437)
+Total output lines: 1286
+
 /* VELOop premium responsive layer: polish the design preview without changing its behavior. */
 :root {
   --ink: #1d1b29;
@@ -51,6 +54,34 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   font-weight: 700;
   transition: color .18s ease;
 }
+.top nav .nav-auth-action {
+  position: relative;
+  padding: 12px 0;
+  border: 0;
+  background: transparent;
+  color: #5c5869;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color .18s ease;
+}
+.top nav .nav-auth-action::after {
+  position: absolute;
+  right: 0;
+  bottom: 5px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: #7658d8;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .2s ease;
+}
+.top nav .nav-auth-action:hover { color: #342b50; }
+.top nav .nav-auth-action:hover::after, .top nav .nav-auth-action:focus-visible::after { transform: scaleX(1); }
+.top nav .nav-auth-status { color: #777183; font-size: 12px; font-weight: 650; white-space: nowrap; }
 .top nav a::after {
   position: absolute;
   right: 0;
@@ -319,8 +350,11 @@ main > .section:nth-of-type(3) { animation-delay: .08s; }
   }
   .top nav.is-open { display: flex; flex-direction: column; }
   .top nav a { padding: 12px 13px; border-radius: 9px; color: #393444; font-size: 13px; }
+  .top nav .nav-auth-action { width: 100%; padding: 12px 13px; border-radius: 9px; color: #393444; font-size: 13px; text-align: left; }
+  .top nav .nav-auth-status { padding: 12px 13px; font-size: 13px; }
   .top nav a:hover { background: #eee9f7; }
-  .top nav a::after { display: none; }
+  .top nav a::after, .top nav .nav-auth-action::after { display: none; }
+  .top nav .nav-auth-action:hover { background: #eee9f7; }
   .hero { min-height: 350px; padding: 66px 22px; }
   .hero h1 { max-width: 650px; font-size: clamp(36px, 8vw, 52px); }
   .hero p { max-width: 480px; font-size: 14px; }
@@ -505,273 +539,7 @@ main > .section:nth-of-type(3) { animation-delay: .08s; }
   .showcase-line { grid-template-columns: 32px minmax(0, 1fr) 18px; gap: 9px; padding: 13px 1px; }
   .showcase-icon { width: 31px; height: 31px; border-radius: 9px; }
   .showcase-line b { font-size: 10px; }
-  .showcase-line small { font-size: 8px; }
-  .showcase-foot { font-size: 8px; }
-}
-
-/* Focused finish: sharpen hierarchy and make the main surfaces feel consistent. */
-.section .heading small { color: #a18bdc; }
-.section .heading h2 { color: #f7f5fc; }
-.section .heading p { color: #b6b3c2; }
-.section .heading label { border-color: #575766; background: #242635; color: #d1cde0; }
-.layout { border-color: #555566; box-shadow: 0 24px 58px rgb(4 5 15 / 25%), inset 0 1px rgb(255 255 255 / 4%); }
-.login { padding: 14px; background: linear-gradient(145deg, #30313e, #292b37); }
-.art { box-shadow: inset 0 0 0 1px rgb(255 255 255 / 8%); }
-.form { border-radius: 14px; }
-.form .brand { color: #282533; }
-.form .secure { color: #86818f; }
-.wallet { background: #292b37; }
-.dashhead h3 { color: #f8f7fb; letter-spacing: -.045em; }
-.balance { box-shadow: inset 0 1px rgb(255 255 255 / 9%), 0 12px 27px rgb(13 12 25 / 18%); }
-.streak, .milestone { box-shadow: inset 0 1px rgb(255 255 255 / 3%); }
-.assets article, .stats article { background: linear-gradient(150deg, #373947, #30323f); }
-.row { transition: background .18s ease; }
-.row:hover { background: rgb(255 255 255 / 2%); }
-.payout { border-color: #555566; background: linear-gradient(145deg, #30313e, #292b37); }
-.summary { box-shadow: inset 0 1px #ffffff; }
-.method, .amounts button { transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease; }
-.method:hover, .amounts button:hover { box-shadow: 0 7px 17px rgb(37 33 48 / 9%); }
-.fields .method.active-method, .amounts button.active { box-shadow: 0 0 0 3px rgb(138 104 217 / 13%); }
-footer { border-top: 1px solid #414250; }
-
-@media (max-width: 520px) {
-  .login { padding: 9px; }
-  .payout { padding: 15px 12px; }
-  .layout { border-radius: 17px; }
-}
-
-/* Contrast pass: strengthen secondary text while preserving the existing palette. */
-.section .heading small { color: #c8b8ff; }
-.section .heading p { color: #d0ccda; }
-.dashhead, .wallet .account { color: #d2cfdd; }
-.assets small, .assets article span, .row small, .stats small,
-.streak-copy>span, .stats article>span { color: #d0cdda; }
-.wallet-pagination { color: #ddd9e6; }
-.wallet aside .brand>span:last-child { color: #d0cdda; }
-.wallet aside>small { color: #d0cdda; }
-.dashhead>span { color: #d2cfdd; }
-.balance small { color: #e1dced; }
-.balance>span { color: #e0dce8; }
-.activity { color: #f3f1f8; }
-.row>strong { color: #e6e3ed; }
-.fields>p, .fields .between { color: #d5d1de; }
-.fields .between small { color: #d4c6ff; }
-.fields .between a { color: #e4e0eb; }
-.payout-detail-label, .payout-options-label { color: #f0edf6; }
-.amounts button small { color: #625e6c; }
-.form form>label { color: #4d4858; }
-.form>small { color: #7057b5; }
-.form>p { color: #625e6d; }
-.form .or { color: #625e6d; }
-.form input::placeholder { color: #777281; opacity: 1; }
-.summary>small { color: #d5d1de; }
-.summary>strong { color: #fff; }
-.summary>p, .summary>div { color: #ddd9e6; }
-.summary>div b { color: #fff; }
-.summary blockquote { color: #765bd2; }
-.summary blockquote b { color: #373342; }
-.summary blockquote small { color: #625e6c; }
-
-/* The sign-in panel shares the dark dashboard surface, so its copy stays light. */
-.form .brand { color: #f8f7fb; }
-.form form>label { color: #f0edf6; }
-.form>small { color: #d1c2ff; }
-.form>p, .form .or { color: #d5d1df; }
-.form .secure { color: #c9c5d2; border-top-color: rgb(255 255 255 / 18%); }
-.center-link { color: #d4c6ff; }
-.showcase-top small, .showcase-line small, .showcase-line>strong { color: #625d6b; }
-.showcase-foot { color: #5d5868; }
-
-/* Wallet dashboard clarity pass: light reading surfaces with a focused violet balance card. */
-.wallet {
-  background: #f7f6fa;
-  border-color: #e5e2ec;
-  box-shadow: 0 24px 58px rgb(28 22 45 / 12%), inset 0 1px #fff;
-}
-.wallet > aside { background: #fff; border-right-color: #ebe8f0; }
-.wallet aside .brand, .wallet aside .brand > span:last-child,
-.wallet aside > small, .wallet aside .account { color: #655f70; }
-.wallet aside p { color: #625b70; border-radius: 10px; transition: background .18s ease, color .18s ease; }
-.wallet aside p:hover { background: #f3effb; }
-.wallet aside p.selected { background: #eee9fb; }
-.wallet aside p.selected a { color: #654bb9; }
-.dash { color: #262333; }
-.dashhead, .dashhead > span, .dashhead h3 { color: #282536; }
-.dashhead > span { letter-spacing: .11em; }
-.dashhead h3 { margin-top: 8px; }
-.dashhead .avatar { background: #eee9fb; color: #644db4; box-shadow: inset 0 0 0 1px #e2dcf3; }
-.balance { background: radial-gradient(ellipse at 92% 5%, #8171cf 0, transparent 42%), linear-gradient(118deg, #332a56, #514276); }
-.streak, .milestone {
-  border: 1px solid #e9e5ef;
-  background: linear-gradient(135deg, #fff, #f8f6fc);
-  color: #2c2938;
-  box-shadow: 0 8px 22px rgb(39 30 61 / 5%);
-}
-.streak-copy small, .milestone-copy small { color: #75679b; }
-.streak-copy > b, .milestone-copy > b { color: #282536; }
-.streak-copy > span, .milestone-copy > span { color: #696474; }
-.streak-days span { border-color: #e5e0ed; background: #f1eef7; color: #716b7b; }
-.streak-days span.done { border-color: #dcebb1; background: #eff7d8; color: #526b20; }
-.streak-days span.today { box-shadow: 0 0 0 2px #8570d044; }
-.streak-checkin { border-color: #ddd5f2; background: #f3efff; color: #5c47a4; }
-.streak-checkin:hover:not(:disabled) { border-color: #b9a9e8; background: #ebe4ff; color: #49358c; }
-.milestone-mark { background: #eee9fb; color: #7059bd; }
-.milestone-track { background: #e8e4ee; }
-.milestone-track i { background: linear-gradient(90deg, #7d66cd, #a795e8); }
-.assets article, .stats article {
-  border: 1px solid #eae7ef;
-  background: #fff;
-  box-shadow: 0 7px 18px rgb(34 28 48 / 4%);
-}
-.assets article:hover { border-color: #c9bee8; box-shadow: 0 12px 24px rgb(67 49 111 / 9%); }
-.assets small, .stats small { color: #777181; }
-.assets strong, .stats article > b { color: #292637; }
-.assets article span, .stats article > span { color: #777181; }
-.activity { color: #292637; }
-.activity button { color: #674db8; }
-.row { border-bottom-color: #ebe8ef; color: #33303e; }
-.row:hover { background: #f0edf6; }
-.row b { color: #302d3a; }
-.row small { color: #726d7b; }
-.row > strong { color: #494455; }
-.wallet-pagination { border-top-color: #e8e4ed; color: #696474; }
-.wallet-pagination button { border-color: #e0dbe8; background: #fff; color: #514b5e; }
-.wallet-pagination button:hover:not(:disabled) { border-color: #bcb0dd; background: #f5f1ff; }
-.wallet-gate, .signed-in { border-color: #e4dfec; background: #fff; color: #514b5e; }
-.wallet-gate a { color: #674db8; }
-.callout { border: 1px solid #e5e0ec; background: linear-gradient(110deg, #fff, #f4f0fb); color: #302c3b; }
-.callout small { color: #706a7a; }
-.callout .button.lime { background: #ddeb9d; color: #343b1e; }
-.wallet-requests .row-debit { color: #bd5878; }
-
-/* Reward game motion: small, ambient feedback keeps the wallet lively without feeling noisy. */
-.hero .orb { animation: reward-orb-drift 12s ease-in-out infinite alternate; transform-origin: center; }
-.hero .o2 { animation-delay: -5s; }
-.hero .pill { transition: transform .22s ease, box-shadow .22s ease; }
-.hero .pill:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgb(71 51 106 / 17%); }
-.balance > b { animation: reward-token-float 6s ease-in-out infinite; }
-.streak-days span.done { animation: reward-check-pop .48s cubic-bezier(.18,.8,.25,1.25) both; }
-.streak-days span.done:nth-child(2) { animation-delay: .08s; }
-.streak-days span.done:nth-child(3) { animation-delay: .16s; }
-.streak-days span.done:nth-child(4) { animation-delay: .24s; }
-.streak-days span.done:nth-child(5) { animation-delay: .32s; }
-.streak-days span.done:nth-child(6) { animation-delay: .4s; }
-.streak-days span.done:nth-child(7) { animation-delay: .48s; }
-.milestone-mark { animation: reward-star-pulse 3.2s ease-in-out infinite; }
-.assets article { animation: reward-card-enter .48s both; }
-.assets article:nth-child(2) { animation-delay: .07s; }
-.assets article:nth-child(3) { animation-delay: .14s; }
-.assets article:nth-child(4) { animation-delay: .21s; }
-.assets article:nth-child(5) { animation-delay: .28s; }
-.assets article:nth-child(6) { animation-delay: .35s; }
-.assets article:hover { transform: translateY(-4px) scale(1.015); }
-.streak-checkin:not(:disabled):active, .amounts button:active, .button:active:not(:disabled) { transform: translateY(1px) scale(.985); }
-@keyframes reward-orb-drift {
-  from { transform: translate3d(-5px, 4px, 0) scale(.98); }
-  to { transform: translate3d(8px, -7px, 0) scale(1.03); }
-}
-@keyframes reward-token-float {
-  0%, 100% { translate: 0 0; rotate: -5deg; }
-  50% { translate: 0 -7px; rotate: 5deg; }
-}
-@keyframes reward-check-pop {
-  from { opacity: .45; transform: scale(.72); }
-  to { opacity: 1; transform: scale(1); }
-}
-@keyframes reward-star-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(112 89 189 / 0%); transform: rotate(0) scale(1); }
-  50% { box-shadow: 0 0 0 7px rgb(112 89 189 / 8%); transform: rotate(12deg) scale(1.04); }
-}
-@keyframes reward-card-enter {
-  from { opacity: .35; translate: 0 8px; }
-  to { opacity: 1; translate: 0 0; }
-}
-
-@media (max-width: 760px) {
-  .wallet { background: #f7f6fa; }
-  .dash { color: #262333; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero .orb, .balance > b, .streak-days span.done, .milestone-mark, .assets article { animation: none !important; }
-  .assets article, .hero .pill, .button, .streak-checkin { transition-duration: .01ms !important; }
-}
-
-/* Consistent, game-inspired motion across the full rewards journey. */
-.top .brand .mark { transition: transform .24s ease, box-shadow .24s ease; }
-.top .brand:hover .mark { transform: rotate(-8deg) scale(1.08); box-shadow: 0 7px 18px rgb(18 16 34 / 28%); }
-.hero-copy > * { animation: reward-content-in .55s both; }
-.hero-copy > *:nth-child(2) { animation-delay: .08s; }
-.hero-copy > *:nth-child(3) { animation-delay: .16s; }
-.hero-copy > *:nth-child(4) { animation-delay: .24s; }
-.hero-showcase { transition: transform .3s ease, box-shadow .3s ease; }
-.hero-showcase:hover { transform: translateY(-4px); box-shadow: 0 25px 58px rgb(33 26 61 / 18%); }
-.showcase-orbit { animation: reward-logo-turn 16s linear infinite; }
-.showcase-line { transition: background .2s ease, transform .2s ease; }
-.showcase-line:hover { transform: translateX(4px); background: rgb(255 255 255 / 48%); }
-.section .heading { animation: reward-content-in .52s both; }
-.section .layout { animation: reward-panel-in .62s both; }
-.stake-art .stake-ring { animation: reward-ring-turn 18s linear infinite; }
-.stake-coin.coin-back { animation: reward-coin-back 5.5s ease-in-out infinite; }
-.stake-coin.coin-front { animation: reward-coin-front 5.5s ease-in-out infinite; }
-.stake-art > i { animation: reward-star-pulse 2.8s ease-in-out infinite; }
-.stake-side, .mine-panel { transition: transform .24s ease, box-shadow .24s ease; }
-.stake-side:hover, .mine-panel:hover { transform: translateY(-3px); box-shadow: 0 20px 48px rgb(4 5 15 / 25%); }
-.mine-grid { animation: reward-grid-shift 22s linear infinite; }
-.mine-orbit.orbit-one { animation: reward-orbit-turn 24s linear infinite; }
-.mine-orbit.orbit-two { animation: reward-orbit-turn 31s linear infinite reverse; }
-.mine-beam { animation: reward-beam 4.5s ease-in-out infinite; }
-.machine-glow { animation: reward-machine-glow 3s ease-in-out infinite; }
-.mine-chip { animation: reward-chip-hover 4s ease-in-out infinite; }
-.mine-chip.chip-two { animation-delay: -2s; }
-.upgrade-grid article { transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
-.upgrade-grid article:hover { transform: translateY(-3px); border-color: #b9a9e8; box-shadow: 0 10px 22px rgb(75 54 130 / 12%); }
-.payout .fields, .payout .summary { animation: reward-content-in .55s both; }
-.payout .summary { animation-delay: .1s; }
-.method, .amounts button { transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease; }
-.method:hover, .amounts button:hover { transform: translateY(-2px); }
-.method.active-method, .amounts button.active { transform: translateY(-1px); }
-.summary blockquote { transition: transform .2s ease, box-shadow .2s ease; }
-.summary blockquote:hover { transform: rotate(-1deg) translateY(-2px); box-shadow: 0 8px 22px rgb(39 30 61 / 10%); }
-.row { animation: reward-content-in .35s both; }
-.row:hover { transform: translateX(3px); }
-.app-notice, .withdrawal-receipt { animation: reward-panel-in .35s both; }
-footer .brand { transition: transform .2s ease; }
-footer .brand:hover { transform: translateY(-2px); }
-@keyframes reward-content-in {
-  from { opacity: 0; translate: 0 10px; }
-  to { opacity: 1; translate: 0 0; }
-}
-@keyframes reward-panel-in {
-  from { opacity: .55; transform: translateY(12px) scale(.995); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes reward-logo-turn { to { transform: rotate(360deg); } }
-@keyframes reward-ring-turn { to { transform: rotate(360deg); } }
-@keyframes reward-orbit-turn { to { rotate: 360deg; } }
-@keyframes reward-coin-back {
-  0%, 100% { translate: -8px 5px; rotate: -9deg; }
-  50% { translate: -15px -2px; rotate: 2deg; }
-}
-@keyframes reward-coin-front {
-  0%, 100% { translate: 12px 5px; rotate: 8deg; }
-  50% { translate: 16px 0; rotate: 14deg; }
-}
-@keyframes reward-grid-shift { to { background-position: 54px 54px; } }
-@keyframes reward-beam {
-  0%, 100% { opacity: .45; translate: -3% 0; }
-  50% { opacity: .9; translate: 3% 0; }
-}
-@keyframes reward-machine-glow {
-  0%, 100% { opacity: .55; scale: .96; }
-  50% { opacity: 1; scale: 1.04; }
-}
-@keyframes reward-chip-hover {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -5px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero-copy > *, .showcase-orbit, .showcase-line, .section .heading, .section .layout,
+  .showcase-line small { font-size:…3437 tokens truncated…e-line, .section .heading, .section .layout,
   .stake-art .stake-ring, .stake-coin, .stake-art > i, .mine-grid, .mine-orbit,
   .mine-beam, .machine-glow, .mine-chip, .payout .fields, .payout .summary,
   .row, .app-notice, .withdrawal-receipt { animation: none !important; }
