@@ -194,6 +194,9 @@
 .auth-form-foot { color: #777282; }
 .auth-form-foot span { color: #7658d8; }
 .auth-footer { color: #898394; }
+.auth-google-hint { margin: 9px auto 0; max-width: 340px; color: #777282; font-size: 11px; line-height: 1.55; text-align: center; }
+.auth-session-check { min-height: 100vh; display: grid; align-content: center; justify-items: center; color: #f4f3f8; }
+.auth-session-check p { color: #d6d2e0; }
 @media (max-width: 680px) {
   .auth-story { background: radial-gradient(ellipse at 12% 3%, rgb(255 255 255 / 70%), transparent 35%), linear-gradient(118deg, #cbbaff 0%, #f2d8f0 58%, #fff0ae 100%); }
   .auth-visual { opacity: .28; }
