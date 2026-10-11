@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "seed": "node seed/seed.js",
     "seed:payout-options": "node seed/seedPayoutOptions.js",
+    "seed:streak": "node seed/seedStreakConfig.js",
     "test": "node --test --test-isolation=none tests/wallet.integration.test.js",
     "db-up": "docker compose -f ../database/docker-compose.yml up -d",
     "db-down": "docker compose -f ../database/docker-compose.yml down"
