@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api.js";
 import GoogleIdentityButton from "../components/GoogleIdentityButton.jsx";
@@ -16,6 +16,27 @@ export default function AuthPage({ mode = "login" }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(() => Boolean(localStorage.getItem("veloop_token")));
+
+  useEffect(() => {
+    const token = localStorage.getItem("veloop_token");
+    if (!token) {
+      setCheckingSession(false);
+      return undefined;
+    }
+
+    let active = true;
+    api.get("/wallet").then(() => {
+      if (active) navigate("/dashboard", { replace: true });
+    }).catch(requestError => {
+      if (!active) return;
+      if ([401, 403].includes(requestError.response?.status)) {
+        localStorage.removeItem("veloop_token");
+      }
+      setCheckingSession(false);
+    });
+    return () => { active = false; };
+  }, [navigate]);
 
   const finishLogin = useCallback(data => {
     localStorage.setItem("veloop_token", data.token);
@@ -57,6 +78,13 @@ export default function AuthPage({ mode = "login" }) {
   }, [finishLogin]);
   const showGoogleError = useCallback(message => setError(message), []);
 
+  if (checkingSession) return <main className="auth-screen">
+    <div className="auth-frame auth-session-check" role="status" aria-live="polite">
+      <span className="auth-kicker"><i aria-hidden="true" /> MEMBER ACCESS</span>
+      <p>Checking your VELOop session…</p>
+    </div>
+  </main>;
+
   return <main className="auth-screen">
     <div className="auth-frame">
       <header className="auth-sitebar">
@@ -95,7 +123,8 @@ export default function AuthPage({ mode = "login" }) {
               <h2 id="auth-title">{isSignup ? "Create your account" : "Welcome back"}</h2>
               <p>{isSignup ? "Create an account to keep your rewards in one place." : "Sign in to continue to your rewards wallet."}</p>
             </div>
-            <div className="auth-signup-google"><GoogleIdentityButton mode={mode} theme="outline" width={340} onCredential={signInWithGoogle} onError={showGoogleError} /></div>
+            <div className="auth-signup-google"><GoogleIdentityButton mode={mode} theme="outline" width={340} autoPrompt onCredential={signInWithGoogle} onError={showGoogleError} /></div>
+        <p className="auth-google-hint">Returning Google users may continue through the secure Google prompt. Otherwise, select Google above. Your VELOop wallet session is created only after Google verifies your account.</p>
         {googleLoading && <p className="auth-working" role="status">Verifying your Google account…</p>}
         <div className="auth-or"><span>OR</span></div>
 
