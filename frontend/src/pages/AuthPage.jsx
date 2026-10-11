@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api.js";
+import { saveSessionToken } from "../services/session.js";
 import GoogleIdentityButton from "../components/GoogleIdentityButton.jsx";
 import "./auth-reference.css";
 
@@ -39,7 +40,7 @@ export default function AuthPage({ mode = "login" }) {
   }, [navigate]);
 
   const finishLogin = useCallback(data => {
-    localStorage.setItem("veloop_token", data.token);
+    saveSessionToken(data.token);
     navigate("/dashboard", { replace: true });
   }, [navigate]);
 
@@ -123,8 +124,8 @@ export default function AuthPage({ mode = "login" }) {
               <h2 id="auth-title">{isSignup ? "Create your account" : "Welcome back"}</h2>
               <p>{isSignup ? "Create an account to keep your rewards in one place." : "Sign in to continue to your rewards wallet."}</p>
             </div>
-            <div className="auth-signup-google"><GoogleIdentityButton mode={mode} theme="outline" width={340} autoPrompt onCredential={signInWithGoogle} onError={showGoogleError} /></div>
-        <p className="auth-google-hint">Returning Google users may continue through the secure Google prompt. Otherwise, select Google above. Your VELOop wallet session is created only after Google verifies your account.</p>
+            <div className="auth-signup-google"><GoogleIdentityButton mode={mode} theme="outline" width={340} onCredential={signInWithGoogle} onError={showGoogleError} /></div>
+        <p className="auth-google-hint">Select Google to securely verify your account. Your VELOop wallet session is created only after Google verifies your account.</p>
         {googleLoading && <p className="auth-working" role="status">Verifying your Google account…</p>}
         <div className="auth-or"><span>OR</span></div>
 
