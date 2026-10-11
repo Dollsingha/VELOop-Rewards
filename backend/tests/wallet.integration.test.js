@@ -10,6 +10,7 @@ import { once } from "node:events";
 const testUri = process.env.MONGO_TEST_URI || "mongodb://127.0.0.1:27017/veloop_wallet_test?replicaSet=rs0";
 process.env.NODE_ENV = "test";
 process.env.JWT_SECRET ||= "local-integration-tests-only-secret-not-for-production";
+process.env.GOOGLE_CLIENT_ID ||= "qa-test-client-id.apps.googleusercontent.com";
 process.env.PAYOUT_DETAILS_ENCRYPTION_KEY ||= '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 const integrationTest = test;
 let models;
@@ -100,6 +101,16 @@ async function api(path, { token = ids.userToken, method = "GET", body, headers 
 async function setVES(userId, amount) {
   await ids.Wallet.updateOne({ userId }, { $set: { ves: amount } });
 }
+
+integrationTest("Google auth endpoint rejects an invalid credential without creating a user", async () => {
+  const usersBefore = await ids.User.countDocuments();
+  const response = await api("/auth/google", {
+    token: null, method: "POST", body: { credential: "not-a-google-id-token" }
+  });
+  assert.equal(response.status, 401);
+  assert.match(response.data.message, /Google sign-in could not be verified/);
+  assert.equal(await ids.User.countDocuments(), usersBefore);
+});
 
 integrationTest("registration creates the user and wallet atomically", async () => {
   const response = await api("/auth/register", {
