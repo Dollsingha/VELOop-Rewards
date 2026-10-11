@@ -29,6 +29,9 @@ const allowedOrigins = [...new Set([...configuredOrigins, ...developmentOrigins]
 if (process.env.TRUST_PROXY === "true") app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(helmet({
+  // Google Identity Services needs the site origin on cross-origin requests.
+  // This policy shares only the origin with Google, not the full URL path.
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
   contentSecurityPolicy: {
     directives: {
       scriptSrc: ["'self'", "https://accounts.google.com/gsi/client"],
