@@ -3,7 +3,7 @@ services:
     name: veloop-rewards-dollsingha
     runtime: node
     plan: free
-    buildCommand: cd frontend && npm ci --include=dev && VITE_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" npm run build && cd ../backend && npm ci --omit=dev
+    buildCommand: cd frontend && npm install --include=dev && VITE_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" npm run build && cd ../backend && npm install --omit=dev
     startCommand: cd backend && npm start
     healthCheckPath: /api/health
     envVars:
@@ -19,4 +19,3 @@ services:
         generateValue: true
       - key: PAYOUT_DETAILS_ENCRYPTION_KEY
         sync: false
-
