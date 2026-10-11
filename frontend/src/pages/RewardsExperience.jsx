@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import api from "../services/api.js";
 import GoogleIdentityButton from "../components/GoogleIdentityButton.jsx";
+import { clearSessionToken, saveSessionToken } from "../services/session.js";
 
 const number = value => Number(value || 0).toLocaleString("en-IN");
 const formatDate = value => value ? new Date(value).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
@@ -209,7 +210,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
     setLoginLoading(true);
     try {
       const { data } = await api.post("/auth/login", { email, password });
-      localStorage.setItem("veloop_token", data.token);
+      saveSessionToken(data.token);
       setAuthenticated(true);
       setPassword("");
       navigate("/wallet#wallet");
@@ -223,7 +224,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
     setGoogleLoading(true);
     try {
       const { data } = await api.post("/auth/google", { credential });
-      localStorage.setItem("veloop_token", data.token);
+      saveSessionToken(data.token);
       setAuthenticated(true);
       setPassword("");
       navigate("/wallet#wallet");
@@ -237,7 +238,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
     // Prevent Google One Tap from immediately signing the user back in after
     // an intentional VELOop sign-out.
     window.google?.accounts?.id?.disableAutoSelect?.();
-    localStorage.removeItem("veloop_token");
+    clearSessionToken();
     setAuthenticated(false);
     navigate("/login#login");
   }
