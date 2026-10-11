@@ -234,6 +234,9 @@ export default function RewardsExperience({ dashboardOnly = false }) {
   const showGoogleError = useCallback(message => setLoginError(message), []);
 
   function signOut() {
+    // Prevent Google One Tap from immediately signing the user back in after
+    // an intentional VELOop sign-out.
+    window.google?.accounts?.id?.disableAutoSelect?.();
     localStorage.removeItem("veloop_token");
     setAuthenticated(false);
     navigate("/login#login");
