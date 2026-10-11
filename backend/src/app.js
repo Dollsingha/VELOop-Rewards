@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import path from "node:path";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import authRoutes from "./routes/authRoutes.js";
 import walletRoutes from "./routes/walletRoutes.js";
@@ -10,8 +13,11 @@ import withdrawalRoutes from "./routes/withdrawalRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
-const configuredOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
-  .split(",").map(origin => origin.trim()).filter(Boolean);
+const frontendDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../frontend/dist");
+const configuredOrigins = [
+  ...(process.env.CLIENT_URL || "http://localhost:5173").split(","),
+  process.env.RENDER_EXTERNAL_URL
+].map(origin => origin?.trim()).filter(Boolean);
 const developmentOrigins = process.env.NODE_ENV === "production"
   ? []
   : [
@@ -22,7 +28,16 @@ const allowedOrigins = [...new Set([...configuredOrigins, ...developmentOrigins]
 
 if (process.env.TRUST_PROXY === "true") app.set("trust proxy", 1);
 app.disable("x-powered-by");
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      scriptSrc: ["'self'", "https://accounts.google.com/gsi/client"],
+      styleSrc: ["'self'", "https:", "'unsafe-inline'", "https://accounts.google.com/gsi/style"],
+      frameSrc: ["'self'", "https://accounts.google.com/gsi/"],
+      connectSrc: ["'self'", "https://accounts.google.com/gsi/"]
+    }
+  }
+}));
 app.use(cors({
   origin(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
@@ -49,7 +64,19 @@ app.use("/api/payout", walletLimiter, payoutRoutes);
 app.use("/api/withdrawals", withdrawalLimiter, withdrawalRoutes);
 app.use("/api/admin", withdrawalLimiter, adminRoutes);
 
-app.use((_req, res) => res.status(404).json({ success: false, message: "Endpoint not found." }));
+if (existsSync(frontendDist)) {
+  app.use(express.static(frontendDist, { index: false }));
+}
+
+app.use((req, res) => {
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ success: false, message: "Endpoint not found." });
+  }
+  if (existsSync(path.join(frontendDist, "index.html"))) {
+    return res.sendFile(path.join(frontendDist, "index.html"));
+  }
+  res.status(404).json({ success: false, message: "Endpoint not found." });
+});
 
 app.use((err, _req, res, _next) => {
   if (res.headersSent) return;

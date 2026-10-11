@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: veloop-rewards-dollsingha
+    runtime: node
+    plan: free
+    buildCommand: cd frontend && npm ci --include=dev && VITE_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" npm run build && cd ../backend && npm ci --omit=dev
+    startCommand: cd backend && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "true"
+      - key: MONGO_URI
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PAYOUT_DETAILS_ENCRYPTION_KEY
+        sync: false
+

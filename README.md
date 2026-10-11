@@ -66,6 +66,10 @@ npm run dev
 
 Open `http://localhost:5173`.
 
+### Optional: enable Google sign-up
+
+Google sign-up uses Google Identity Services in the browser and verifies the returned ID token on the API before creating or signing in to an account. Create an OAuth 2.0 **Web application** client in Google Cloud Console and add `http://localhost:5173` (and `http://127.0.0.1:5173` if you use that address) as an authorized JavaScript origin. Put the same web client ID in `GOOGLE_CLIENT_ID` in `backend/.env` and `VITE_GOOGLE_CLIENT_ID` in `frontend/.env`, then restart both development servers. No client secret is needed or should be added to this app. Without those values, the normal email/password sign-in remains available and the Google button shows a setup note.
+
 ## Wallet and payout design
 
 MongoDB stores the current wallet and all ledger rows. Credits and debits are performed by backend services; each ledger row records currency, direction, amount, balance before/after, source, reference, and timestamp. Debit updates use a conditional balance check. Multi-document financial operations run inside a replica-set transaction.
@@ -101,6 +105,9 @@ Keep wallet mutations atomic and the ledger append-only. Preserve idempotency ke
 ## Deployment and submission
 
 A deployment should use a separate development/demo MongoDB Atlas replica set and fresh secrets in the hosting provider. The app has no real payout-provider integration. Deploying publicly or pushing to GitHub requires explicit access to the destination project/account and a review of the demo credentials and environment settings first.
+
+For a stable hosted demo URL, see [DEPLOYMENT.md](DEPLOYMENT.md). The Render Blueprint is in `render.yaml`; it does not contain database credentials or application secrets.
+
 
 
 
