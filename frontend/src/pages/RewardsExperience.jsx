@@ -305,7 +305,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
             <span className="eyebrow">REWARDS, IN A BETTER LOOP</span>
             <h1>A clearer way to keep <em>good things moving.</em></h1>
             <p>A VELOop Rewards wallet with transparent balances, a traceable activity ledger, and clear payout status.</p>
-            <div className="hero-actions"><a className="hero-primary" href="#wallet">Explore your wallet <span>→</span></a><a className="hero-secondary" href="/login">Member sign in</a></div>
+            <div className="hero-actions"><a className="hero-primary" href="#wallet">Explore your wallet <span>→</span></a>{authenticated ? <a className="hero-secondary" href="/dashboard#wallet">Open dashboard</a> : <a className="hero-secondary" href="/login">Member sign in</a>}</div>
             <div className="pill">✳ &nbsp; Backend-connected wallet &nbsp;·&nbsp; Reward rules stay server-side</div>
           </div>
           <div className="hero-showcase" aria-label="Wallet system highlights">
@@ -319,7 +319,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
         <b className="orb o1" /><b className="orb o2" />
       </section>}
 
-      {!dashboardOnly && <section className="section auth-inline-section" id="login">
+      {!dashboardOnly && !authenticated && <section className="section auth-inline-section" id="login">
         <div className="auth-inline-topbar"><a href="#home" aria-label="Back to home">‹</a><span>Login</span></div>
         <h2 className="auth-inline-title">Login To Your Account</h2>
         <div className="auth-inline-card">
