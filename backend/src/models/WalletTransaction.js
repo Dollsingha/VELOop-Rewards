@@ -6,7 +6,7 @@ const schema = new mongoose.Schema({
   currency: { type: String, enum: ["VES", "SVES", "GEMS", "TOKENS", "SPINS"], required: true },
   type: { type: String, enum: [
     "REWARD", "BONUS", "REFERRAL", "DAILY_REWARD", "AD_REWARD", "GAME_REWARD",
-    "ADMIN_CREDIT", "EXCHANGE_CREDIT", "WITHDRAWAL", "EXCHANGE_DEBIT",
+    "ADMIN_CREDIT", "EXCHANGE_CREDIT", "PURCHASE_CREDIT", "WITHDRAWAL", "EXCHANGE_DEBIT",
     "ADMIN_DEBIT", "CORRECTION", "WITHDRAWAL_REVERSAL"
   ], required: true },
   amount: { type: Number, required: true, min: 1, validate: Number.isSafeInteger },
@@ -23,4 +23,3 @@ const schema = new mongoose.Schema({
 schema.index({ userId: 1, createdAt: -1, _id: -1 });
 
 export default mongoose.model("WalletTransaction", schema);
-
