@@ -110,3 +110,7 @@ Moves a pending or processing withdrawal to `REJECTED` and reverses the VE debit
 
 
 
+
+## RazorpayX sandbox UPI payouts
+
+Admin-only routes: `GET /api/admin/payout-integration`, `POST /api/admin/withdrawals/:id/razorpay-test`, and `POST /api/admin/withdrawals/:id/razorpay-test/reconcile`. Signed raw-body webhook: `POST /api/webhooks/razorpayx-test`. Payout amounts come from the stored withdrawal; no live keys are accepted. See [sandbox setup](RAZORPAY_TEST_SETUP.md). Provider credentials and an actual sandbox run are still required before claiming external payout verification.
