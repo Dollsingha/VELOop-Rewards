@@ -5,9 +5,14 @@ import { validateAdminWalletMutation, validatePagination, validateWithdrawalRevi
 import { body, query } from "express-validator";
 import { validateRequest } from "../validators/requests.js";
 
+import { configuration as payoutConfiguration, submit as submitTestPayout, reconcile as reconcileTestPayout } from "../controllers/razorpayTestPayoutController.js";
+
 const router = Router();
 router.use(requireAuth, requireAdmin);
 router.get("/stats", adminStats);
+router.get("/payout-integration", payoutConfiguration);
+router.post("/withdrawals/:id/razorpay-test", validateWithdrawalId, submitTestPayout);
+router.post("/withdrawals/:id/razorpay-test/reconcile", validateWithdrawalId, reconcileTestPayout);
 router.patch("/payout-options/:methodId", validatePayoutOptionUpdate, updatePayoutOption);
 router.post("/wallet/credit", validateAdminWalletMutation, credit);
 router.post("/wallet/debit", validateAdminWalletMutation, debit);
