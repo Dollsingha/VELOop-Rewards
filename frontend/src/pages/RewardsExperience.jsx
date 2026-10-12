@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import api from "../services/api.js";
 import GoogleIdentityButton from "../components/GoogleIdentityButton.jsx";
+import DemoWalletSummary from "../components/DemoWalletSummary.jsx";
 import WithdrawalBalanceNotice from "../components/WithdrawalBalanceNotice.jsx";
 import { clearSessionToken, saveSessionToken } from "../services/session.js";
 
@@ -354,6 +355,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
               <Notice error={walletError} />
               {walletLoading && !wallet && <div className="wallet-gate">Loading your wallet from the VELOop API…</div>}
               <div className="balance"><small>TOTAL REWARD BALANCE</small><strong>{wallet ? number(wallet.ves) : "—"} <i>VEs</i></strong><span>Balance loaded securely from your account.</span><b>V</b></div>
+              <DemoWalletSummary />
               <div className="streak"><div className="streak-copy"><small>DAILY EARNING STREAK</small><b>{streakLoading && !streak ? "Loading streak…" : `${number(streak?.currentStreak)} day${streak?.currentStreak === 1 ? "" : "s"} in a row`} <i>✦</i></b><span>{streak?.checkedInToday ? "Today's check-in is complete. Keep it going tomorrow." : "Check in once each day to build your streak."}{streak ? ` Best: ${number(streak.longestStreak)} days.` : ""}</span>
                 <button type="button" className="streak-checkin" disabled={!streak || !streak.canCheckIn || streakLoading || streakSubmitting} onClick={checkIn}>{streakSubmitting ? "Checking in…" : streak?.checkedInToday ? "Checked in today ✓" : "Daily check-in →"}</button>
                 <Notice error={streakError} success={streakMessage} />
