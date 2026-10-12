@@ -1,0 +1,6 @@
+.withdrawal-balance-note { margin: 18px 0 10px; padding: 16px; border: 1px solid rgb(128 218 181 / 32%); border-radius: 12px; background: #203238; color: #eafcf4; font-size: 12px; line-height: 1.55; }
+.withdrawal-balance-note.has-shortfall { border-color: rgb(250 208 104 / 38%); background: #342e2d; color: #fff3cd; }
+.withdrawal-balance-note > div { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 5px; }
+.withdrawal-balance-note > div b { white-space: nowrap; color: #fff; }
+.withdrawal-balance-note p { margin: 10px 0 6px; font-weight: 650; }
+.withdrawal-balance-note small { display: block; color: #d2d0da; font-size: 11px; line-height: 1.6; }
