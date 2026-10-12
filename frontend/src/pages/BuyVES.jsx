@@ -133,11 +133,11 @@ export default function BuyVES() {
 
   return <main className="reference-page">
     <section className="page-heading">
-      <div><div className="eyebrow"><span className="eyebrow-dot" /> YOUR REWARDS</div><h1>Buy VES securely.</h1><p className="page-lead">VES is added only after the payment is verified by the server.</p></div>
+      <div><div className="eyebrow"><span className="eyebrow-dot" /> YOUR REWARDS</div><h1>Demo payment &amp; VEs.</h1><p className="page-lead">Try a simulated payment below. Demo VEs appear in your separate demo wallet; no real money is charged.</p></div>
       <Link className="button button-dark heading-action" to="/wallet">← Back to wallet</Link>
     </section>
     <DemoCheckout />
-    <section className="reference-dashboard" style={{ maxWidth: 760, margin: "24px auto", padding: 28 }}>
+    {(checkoutReady || orders.length > 0) && <section className="reference-dashboard" style={{ maxWidth: 760, margin: "24px auto", padding: 28 }}>
       <Link className="reference-wallet-brand" to="/"><Brand /></Link>
       <h2 style={{ marginTop: 24 }}>Choose a VES package</h2>
       {loading && <p role="status">Loading packages…</p>}
@@ -162,6 +162,6 @@ export default function BuyVES() {
         </article>)}
       </section>}
       <p style={{ marginTop: 16, fontSize: 13 }}>Test payments require Razorpay test keys. Never share your Razorpay secret key with anyone or put it in frontend code.</p>
-    </section>
+    </section>}
   </main>;
 }
