@@ -4,3 +4,7 @@
 .withdrawal-balance-note > div b { white-space: nowrap; color: #fff; }
 .withdrawal-balance-note p { margin: 10px 0 6px; font-weight: 650; }
 .withdrawal-balance-note small { display: block; color: #d2d0da; font-size: 11px; line-height: 1.6; }
+
+.withdrawal-balance-note h4 { margin: 0 0 12px; color: #fff3cd; font-size: 15px; line-height: 1.4; }
+.withdrawal-balance-note a { display: inline-flex; align-items: center; min-height: 44px; margin: 8px 0; color: #d5f4ff; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.withdrawal-balance-note a:focus-visible { outline: 2px solid #d5f4ff; outline-offset: 4px; border-radius: 4px; }
