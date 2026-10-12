@@ -12,6 +12,7 @@ import payoutRoutes from "./routes/payoutRoutes.js";
 import withdrawalRoutes from "./routes/withdrawalRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import { webhook as razorpayTestWebhook } from "./controllers/razorpayTestPayoutController.js";
 
 const app = express();
 const frontendDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../frontend/dist");
@@ -49,6 +50,7 @@ app.use(cors({
     callback(error);
   }
 }));
+app.post("/api/webhooks/razorpayx-test", rateLimit({ windowMs: 60000, limit: 120, standardHeaders: "draft-8", legacyHeaders: false }), express.raw({ type: "application/json", limit: "32kb" }), razorpayTestWebhook);
 app.use(express.json({ limit: "32kb", strict: true }));
 
 const testMode = process.env.NODE_ENV === "test";
