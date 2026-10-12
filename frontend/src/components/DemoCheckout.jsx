@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api.js";
+import DemoRewards from "./DemoRewards.jsx";
 import "./demo-checkout.css";
 
 const format = value => Number(value || 0).toLocaleString("en-IN");
@@ -76,6 +77,7 @@ export default function DemoCheckout() {
         </>}</div>
         <p className="demo-footnote">Illustrative packages only. No UPI ID, PIN, card details or bank transfer is required.</p>
       </>}
+      <DemoRewards />
       <h3>Demo transaction history</h3>
       {!data.receipts?.length ? <p>No demo transactions yet.</p> : <ul className="demo-receipts">{data.receipts.map(item => <li key={item.receiptId}>
         <div><b>{item.status === "SIMULATED_SUCCESS" ? "Simulated success" : "Simulated failure"}</b><span>+{format(item.amount)} demo VEs</span></div>
