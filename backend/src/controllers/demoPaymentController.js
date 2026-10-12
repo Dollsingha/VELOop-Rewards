@@ -6,6 +6,11 @@ import { DEMO_PACKAGES } from "../config/demoPackages.js";
 import { withTransaction } from "../services/walletService.js";
 import { httpError } from "../utils/httpError.js";
 
+let indexesReady;
+async function ensureDemoIndexes() {
+  indexesReady ||= Promise.all([DemoWallet.createIndexes(), DemoPayment.createIndexes()]).catch(error => { indexesReady = undefined; throw error; });
+  await indexesReady;
+}
 function enabled() { return process.env.DEMO_PAYMENTS_ENABLED === "true"; }
 function publicReceipt(item) {
   const result = item.toObject ? item.toObject() : { ...item };
@@ -41,6 +46,7 @@ export async function simulate(req, res, next) {
       if (receipt.requestHash !== requestHash) throw httpError("This request key was already used for another simulation.", 409);
       return receipt;
     }
+    await ensureDemoIndexes();
     const existing = await duplicate();
     if (existing) return res.json({ success: true, duplicate: true, receipt: publicReceipt(existing), mode: "DEMO" });
     // Initialize only the isolated demo balance; the redeemable Wallet is never mutated.
