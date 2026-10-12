@@ -1,0 +1,72 @@
+/* Clear account state and actions with consistent spacing on every screen size. */
+.section.auth-inline-section {
+  width: min(100% - 40px, 900px);
+  margin: clamp(38px, 6vw, 72px) auto;
+  padding: clamp(14px, 2.4vw, 22px);
+  border: 1px solid rgb(181 160 255 / 20%);
+  border-radius: 22px;
+  background: linear-gradient(145deg, #17182b, #141a2b 78%, #19152c);
+  box-shadow: 0 22px 56px rgb(4 5 18 / 28%);
+}
+.auth-inline-topbar { min-height: 50px; margin-bottom: clamp(18px, 3vw, 28px); }
+.auth-inline-title {
+  width: min(100%, 720px);
+  margin: 0 auto 14px;
+  text-align: left;
+  font-size: clamp(22px, 3vw, 29px);
+  letter-spacing: -.035em;
+}
+.auth-inline-card {
+  width: min(100%, 720px);
+  min-height: 142px;
+  padding: clamp(20px, 3.2vw, 30px);
+  border-color: rgb(190 178 255 / 19%);
+  border-radius: 17px;
+  background: linear-gradient(145deg, #24243b, #20263a);
+  box-shadow: inset 0 1px rgb(255 255 255 / 5%), 0 12px 32px rgb(5 6 22 / 20%);
+}
+.auth-inline-signed-in {
+  display: grid;
+  justify-items: stretch;
+  gap: 20px;
+  text-align: left;
+}
+.auth-inline-status { display: grid; gap: 7px; }
+.auth-inline-status b { display: flex; align-items: center; gap: 9px; color: #efffd0; font-size: 15px; }
+.auth-inline-status b span {
+  width: 23px;
+  height: 23px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(192 239 126 / 40%);
+  border-radius: 50%;
+  background: rgb(152 218 100 / 14%);
+  color: #c9f678;
+  font-size: 12px;
+}
+.auth-inline-signed-in p { color: #c6c5d3; font-size: 13px; line-height: 1.55; }
+.auth-inline-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; }
+.auth-inline-actions > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #c3f4ff;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}
+.auth-inline-actions > a span { transition: transform .18s ease; }
+.auth-inline-actions > a:hover span { transform: translateX(3px); }
+.auth-inline-actions .logout-button { min-width: 142px; }
+@media (max-width: 600px) {
+  .section.auth-inline-section { width: calc(100% - 24px); margin: 34px auto 46px; padding: 12px; }
+  .auth-inline-title { margin-bottom: 12px; font-size: 22px; }
+  .auth-inline-card { width: 100%; min-height: 0; padding: 20px 17px; }
+  .auth-inline-signed-in { gap: 16px; }
+  .auth-inline-actions { align-items: stretch; gap: 8px; }
+  .auth-inline-actions > a, .auth-inline-actions .logout-button { width: 100%; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-inline-actions > a span { transition: none; }
+}
