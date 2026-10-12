@@ -22,7 +22,9 @@ const schema = new mongoose.Schema({
   transactionId: { type: String, required: true, index: true },
   idempotencyKey: { type: String, required: true },
   requestedAt: { type: Date, default: Date.now, index: true },
-  processedAt: Date
+  processedAt: Date,
+  payoutProvider: { type: String, enum: ["MANUAL", "RAZORPAYX_TEST"], default: "MANUAL" },
+  providerStatus: { type: String, maxlength: 30 }
 }, { timestamps: true });
 
 schema.index({ userId: 1, idempotencyKey: 1 }, { unique: true });
