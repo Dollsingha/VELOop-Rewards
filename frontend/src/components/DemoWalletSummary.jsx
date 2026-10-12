@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api.js";
+import DemoRewards from "./DemoRewards.jsx";
 import "./demo-checkout.css";
 
 const format = value => Number(value || 0).toLocaleString("en-IN");
@@ -31,6 +32,7 @@ export default function DemoWalletSummary() {
     <p>This balance comes from payment simulations. The redeemable wallet above stays separate, so demo VEs cannot be paid out through UPI.</p>
     {error && <p role="alert">{error}</p>}
     {data?.receipts?.[0] && <small>Latest demo: {data.receipts[0].status === "SIMULATED_SUCCESS" ? "success" : "failure"} · {format(data.receipts[0].balanceBefore)} → {format(data.receipts[0].balanceAfter)} demo VEs</small>}
+    <DemoRewards />
     <Link className="button button-dark" to="/buy-ves">Open demo payment &amp; history →</Link>
   </section>;
 }
