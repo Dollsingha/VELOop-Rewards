@@ -17,3 +17,8 @@
 .demo-receipts li { border-top: 1px solid #52617d; padding: 14px 0; overflow-wrap: anywhere; }
 .demo-receipts li div { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; }
 .demo-receipts li p,.demo-receipts li small { color: #c9d3e8; font-size: 12px; line-height: 1.6; }
+
+.demo-wallet-summary { width: 100%; margin: 18px 0; padding: 20px; }
+.demo-wallet-summary > p { font-size: 12px; line-height: 1.6; }
+.demo-wallet-summary > small { display: block; color: #c9d3e8; line-height: 1.6; }
+.demo-wallet-summary > a.button { margin-top: 16px; max-width: 100%; white-space: normal; }
