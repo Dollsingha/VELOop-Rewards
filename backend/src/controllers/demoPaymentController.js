@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
 import DemoWallet from "../models/DemoWallet.js";
+import DemoRewardClaim from "../models/DemoRewardClaim.js";
+import { DEMO_STARTER } from "./demoRewardController.js";
 import DemoPayment from "../models/DemoPayment.js";
 import AuditLog from "../models/AuditLog.js";
 import { DEMO_PACKAGES } from "../config/demoPackages.js";
@@ -24,7 +26,8 @@ export async function overview(req, res, next) {
       DemoWallet.findOne({ userId: req.user._id }).lean(),
       DemoPayment.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(20).lean()
     ]);
-    res.json({ success: true, enabled: enabled(), mode: "DEMO", demoVes: wallet?.demoVes || 0,
+    const rewardClaim = await DemoRewardClaim.findOne({ userId: req.user._id }).lean();
+    res.json({ rewardClaim, starterRewards: DEMO_STARTER, rewardBalances: { sves: wallet?.demoSves || 0, gems: wallet?.demoGems || 0, tokens: wallet?.demoTokens || 0, spins: wallet?.demoSpins || 0 }, success: true, enabled: enabled(), mode: "DEMO", demoVes: wallet?.demoVes || 0,
       packages: enabled() ? DEMO_PACKAGES : [], receipts: receipts.map(publicReceipt),
       message: "Simulation only. No money moves. Demo VEs cannot be withdrawn, transferred or converted to real rewards." });
   } catch (error) { next(error); }
