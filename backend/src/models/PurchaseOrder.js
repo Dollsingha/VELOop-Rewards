@@ -9,6 +9,7 @@ const schema = new mongoose.Schema({
   razorpayOrderId: { type: String, required: true, unique: true },
   razorpayPaymentId: { type: String, unique: true, sparse: true },
   status: { type: String, enum: ["CREATED", "PAID", "FAILED"], default: "CREATED", index: true },
+  keyFingerprint: { type: String, select: false },
   creditedAt: { type: Date }
 }, { timestamps: true });
 
