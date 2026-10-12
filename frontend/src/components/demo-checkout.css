@@ -22,3 +22,10 @@
 .demo-wallet-summary > p { font-size: 12px; line-height: 1.6; }
 .demo-wallet-summary > small { display: block; color: #c9d3e8; line-height: 1.6; }
 .demo-wallet-summary > a.button { margin-top: 16px; max-width: 100%; white-space: normal; }
+
+.demo-rewards { margin: 20px 0; border-top: 1px solid #607091; padding-top: 18px; }
+.demo-rewards p,.demo-rewards small { color: #d0daee; font-size: 12px; line-height: 1.6; }
+.demo-reward-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin: 16px 0; }
+.demo-reward-grid article { background: #29354b; border: 1px solid #67779d; border-radius: 12px; padding: 14px; min-width: 0; }
+.demo-reward-grid span { color: #c8d3eb; font-size: 12px; }.demo-reward-grid strong { display:block; font-size: 24px; color:#f0efff; }
+.demo-rewards > button { margin: 14px 0; width: 100%; white-space: normal; justify-content: center; }.demo-rewards details { color: #d7e2f8; font-size: 12px; }
