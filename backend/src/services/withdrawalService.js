@@ -182,6 +182,7 @@ export async function transitionWithdrawal({ actorId, withdrawalId, nextStatus, 
     const withdrawal = await Withdrawal.findOne(filter).session(session);
     if (!withdrawal) throw httpError("Withdrawal not found or cannot move to that status.", 409);
 
+    if (withdrawal.payoutProvider === "RAZORPAYX_TEST") throw httpError("This withdrawal is managed by RazorpayX test payouts. Reconcile its provider status instead of changing it manually.", 409);
     let reversalTransactionId;
     if (["REJECTED", "CANCELLED"].includes(nextStatus)) {
       const { ledger } = await creditWallet({
