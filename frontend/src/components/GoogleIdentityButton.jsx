@@ -31,9 +31,10 @@ export default function GoogleIdentityButton({ mode = "login", theme = "filled_b
       if (initializedClientId !== clientId) {
         window.google.accounts.id.initialize({
           client_id: clientId,
-          // Keep auto-select enabled at page level so a Google button mounted
-          // elsewhere first does not prevent returning-user One Tap on /login.
+          // Keep account selection explicit and use the browser-managed button flow.
           auto_select: false,
+          use_fedcm_for_button: true,
+          button_auto_select: false,
           callback: response => response.credential
             ? currentHandlers.onCredential?.(response.credential)
             : currentHandlers.onError?.("Google did not return a sign-in credential.")
