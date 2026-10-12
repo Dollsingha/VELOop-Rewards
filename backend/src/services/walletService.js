@@ -84,7 +84,9 @@ export async function debitWallet({
 
   if (!wallet) {
     if (!(await walletExists(userId, session))) throw httpError("Wallet not found.", 404);
-    throw httpError(`Insufficient ${currency} balance.`, 400);
+    const snapshot = await Wallet.findOne({ userId }).session(session || null).lean();
+    const available = snapshot?.[field] || 0;
+    throw httpError(`Insufficient ${currency} balance. This request requires ${amount.toLocaleString("en-IN")} ${currency}; your wallet has ${available.toLocaleString("en-IN")} ${currency}. You need ${Math.max(0, amount - available).toLocaleString("en-IN")} more ${currency}.`, 400);
   }
 
   const [ledger] = await WalletTransaction.create([{
