@@ -11,6 +11,7 @@ import walletRoutes from "./routes/walletRoutes.js";
 import payoutRoutes from "./routes/payoutRoutes.js";
 import withdrawalRoutes from "./routes/withdrawalRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 const app = express();
 const frontendDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../frontend/dist");
@@ -29,15 +30,13 @@ const allowedOrigins = [...new Set([...configuredOrigins, ...developmentOrigins]
 if (process.env.TRUST_PROXY === "true") app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(helmet({
-  // Google Identity Services needs the site origin on cross-origin requests.
-  // This policy shares only the origin with Google, not the full URL path.
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },
   contentSecurityPolicy: {
     directives: {
-      scriptSrc: ["'self'", "https://accounts.google.com/gsi/client"],
+      scriptSrc: ["'self'", "https://accounts.google.com/gsi/client", "https://checkout.razorpay.com"],
       styleSrc: ["'self'", "https:", "'unsafe-inline'", "https://accounts.google.com/gsi/style"],
-      frameSrc: ["'self'", "https://accounts.google.com/gsi/"],
-      connectSrc: ["'self'", "https://accounts.google.com/gsi/"]
+      frameSrc: ["'self'", "https://accounts.google.com/gsi/", "https://api.razorpay.com", "https://checkout.razorpay.com"],
+      connectSrc: ["'self'", "https://accounts.google.com/gsi/", "https://api.razorpay.com"]
     }
   }
 }));
@@ -66,6 +65,7 @@ app.use("/api/wallet", walletLimiter, walletRoutes);
 app.use("/api/payout", walletLimiter, payoutRoutes);
 app.use("/api/withdrawals", withdrawalLimiter, withdrawalRoutes);
 app.use("/api/admin", withdrawalLimiter, adminRoutes);
+app.use("/api/payments", walletLimiter, paymentRoutes);
 
 if (existsSync(frontendDist)) {
   app.use(express.static(frontendDist, { index: false }));
@@ -103,4 +103,3 @@ app.use((err, _req, res, _next) => {
 });
 
 export default app;
-
