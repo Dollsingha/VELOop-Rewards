@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import RewardsExperience from "./pages/RewardsExperience.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
+import BuyVES from "./pages/BuyVES.jsx";
 import api from "./services/api.js";
 import { authChangeEvent, clearSessionToken } from "./services/session.js";
 
@@ -68,6 +69,7 @@ export default function App() {
         <Link onClick={closeMenu} to="/wallet#stake">Stake &amp; Earn</Link>
         <Link onClick={closeMenu} to="/wallet#mine">Mine &amp; Earn</Link>
         <Link onClick={closeMenu} to="/payout#payout">Payout</Link>
+        {authStatus === "signed-in" && <Link onClick={closeMenu} to="/buy-ves">Buy VES</Link>}
       </nav>
       <b className="tag"><i /> MEMBER REWARDS</b>
       <button className="nav-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen(open => !open)}><span /><span /><span /></button>
@@ -75,8 +77,8 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="signup" />} />
+      <Route path="/buy-ves" element={<BuyVES />} />
       <Route path="*" element={<ExperienceRoute />} />
     </Routes>
   </>;
 }
-
