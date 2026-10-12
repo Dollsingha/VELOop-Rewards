@@ -4,6 +4,7 @@ import { after, before, beforeEach, test } from "node:test";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import { once } from "node:events";
+import crypto from "node:crypto";
 
 // Safe local-only default: integration tests always use a database explicitly
 // named for tests and never fall back to the development MONGO_URI.
@@ -25,7 +26,7 @@ before(async () => {
     throw new Error("MONGO_TEST_URI must use a separate database whose name contains 'test'.");
   }
   process.env.MONGO_URI = testUri;
-  const [{ default: app }, db, userModel, walletModel, payoutModel, transactionModel, withdrawalModel, auditModel, streakConfigModel, userStreakModel, checkInModel, jwt] = await Promise.all([
+  const [{ default: app }, db, userModel, walletModel, payoutModel, transactionModel, withdrawalModel, auditModel, streakConfigModel, userStreakModel, checkInModel, jwt, razorpayPayoutModel] = await Promise.all([
     import("../src/app.js"),
     import("../src/config/db.js"),
     import("../src/models/User.js"),
@@ -37,10 +38,11 @@ before(async () => {
     import("../src/models/StreakConfig.js"),
     import("../src/models/UserStreak.js"),
     import("../src/models/DailyCheckIn.js"),
-    import("../src/utils/jwt.js")
+    import("../src/utils/jwt.js"),
+    import("../src/models/RazorpayTestPayout.js")
   ]);
   await db.connectDB();
-  models = [userModel.default, walletModel.default, payoutModel.default, transactionModel.default, withdrawalModel.default, auditModel.default, streakConfigModel.default, userStreakModel.default, checkInModel.default];
+  models = [userModel.default, walletModel.default, payoutModel.default, transactionModel.default, withdrawalModel.default, auditModel.default, streakConfigModel.default, userStreakModel.default, checkInModel.default, razorpayPayoutModel.default];
   auth = { signToken: jwt.signToken };
   server = app.listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -83,6 +85,7 @@ beforeEach(async () => {
   ids.AuditLog = AuditLog;
   ids.UserStreak = models[7];
   ids.DailyCheckIn = models[8];
+  ids.RazorpayTestPayout = models[9];
 });
 
 async function api(path, { token = ids.userToken, method = "GET", body, headers = {} } = {}) {
@@ -374,3 +377,123 @@ test("payout details are authenticated encrypted at rest", async () => {
   assert.deepEqual(decryptPayoutDetails(encrypted), original);
 });
 
+function configureTestProvider(t) {
+  const values = {
+    RAZORPAYX_TEST_ENABLED: "true", RAZORPAYX_TEST_KEY_ID: "rzp_test_fixture123",
+    RAZORPAYX_TEST_KEY_SECRET: "test-secret-only", RAZORPAYX_TEST_ACCOUNT_NUMBER: "test-account-only",
+    RAZORPAYX_TEST_WEBHOOK_SECRET: "test-webhook-secret-only"
+  };
+  const previous = Object.fromEntries(Object.keys(values).map(key => [key, process.env[key]]));
+  Object.assign(process.env, values);
+  t.after(() => Object.entries(previous).forEach(([key, value]) => value === undefined ? delete process.env[key] : process.env[key] = value));
+}
+
+function mockProvider(t, handler) {
+  const originalFetch = globalThis.fetch;
+  t.mock.method(globalThis, "fetch", async (url, options) => {
+    if (!String(url).startsWith("https://api.razorpay.com/v1/")) return originalFetch(url, options);
+    const result = await handler(String(url), options);
+    return new Response(JSON.stringify(result), { status: 200, headers: { "Content-Type": "application/json" } });
+  });
+}
+
+async function requestTestWithdrawal() {
+  const response = await api("/withdrawals", {
+    method: "POST", headers: { "Idempotency-Key": "razorpay-test-withdrawal" },
+    body: { method: "upi", optionId: "upi_10", payoutDetails: { upiId: "demo@bank" } }
+  });
+  assert.equal(response.status, 201);
+  return response.data.withdrawal.withdrawalId;
+}
+
+integrationTest("Razorpay test payout is admin-only and rejects missing configuration or live keys", async t => {
+  configureTestProvider(t);
+  const withdrawalId = await requestTestWithdrawal();
+  const path = `/admin/withdrawals/${withdrawalId}/razorpay-test`;
+  assert.equal((await api(path, { method: "POST", body: {} })).status, 403);
+  process.env.RAZORPAYX_TEST_ENABLED = "false";
+  assert.equal((await api(path, { token: ids.adminToken, method: "POST", body: {} })).status, 503);
+  process.env.RAZORPAYX_TEST_ENABLED = "true";
+  process.env.RAZORPAYX_TEST_KEY_ID = "rzp_live_forbidden";
+  assert.equal((await api(path, { token: ids.adminToken, method: "POST", body: {} })).status, 503);
+  assert.equal((await ids.Withdrawal.findOne({ withdrawalId })).status, "PENDING");
+  assert.equal(await ids.RazorpayTestPayout.countDocuments(), 0);
+});
+
+integrationTest("Razorpay test payout uses server amount, submits once, and confirms provider success", async t => {
+  configureTestProvider(t);
+  const withdrawalId = await requestTestWithdrawal();
+  let submissions = 0;
+  const entity = { id: "pout_Test123", entity: "payout", reference_id: withdrawalId, amount: 1000, currency: "INR", mode: "UPI", status: "processing" };
+  mockProvider(t, async (_url, options) => {
+    if (options.method === "POST") {
+      submissions++;
+      const body = JSON.parse(options.body);
+      assert.equal(body.amount, 1000);
+      assert.equal(body.currency, "INR");
+      assert.equal(body.reference_id, withdrawalId);
+      assert.match(options.headers["X-Payout-Idempotency"], /^[0-9a-f-]{36}$/);
+      assert.equal(body.fund_account.vpa.address, "demo@bank");
+    }
+    return entity;
+  });
+  const path = `/admin/withdrawals/${withdrawalId}/razorpay-test`;
+  const submitted = await api(path, { token: ids.adminToken, method: "POST", body: { amount: 999999, currency: "USD" } });
+  assert.equal(submitted.status, 200);
+  assert.equal(submitted.data.withdrawal.status, "PROCESSING");
+  assert.equal((await api(path, { token: ids.adminToken, method: "POST", body: {} })).data.duplicate, true);
+  assert.equal(submissions, 1);
+  entity.status = "processed";
+  const confirmed = await api(`${path}/reconcile`, { token: ids.adminToken, method: "POST", body: {} });
+  assert.equal(confirmed.data.withdrawal.status, "APPROVED");
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 7600);
+});
+
+integrationTest("uncertain provider response holds the debit and requires reconciliation", async t => {
+  configureTestProvider(t);
+  const withdrawalId = await requestTestWithdrawal();
+  let submissions = 0;
+  mockProvider(t, async (_url, options) => {
+    if (options.method === "POST") { submissions++; throw new Error("Simulated transport timeout"); }
+    return { items: [{ id: "pout_TestUnknown", entity: "payout", reference_id: withdrawalId, amount: 1000, currency: "INR", mode: "UPI", status: "failed" }] };
+  });
+  const path = `/admin/withdrawals/${withdrawalId}/razorpay-test`;
+  assert.equal((await api(path, { token: ids.adminToken, method: "POST", body: {} })).status, 502);
+  assert.equal((await api(path, { token: ids.adminToken, method: "POST", body: {} })).status, 409);
+  assert.equal((await api(`/admin/withdrawals/${withdrawalId}/reject`, { token: ids.adminToken, method: "POST", body: {} })).status, 409);
+  assert.equal(submissions, 1);
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 7600);
+  const reconciled = await api(`${path}/reconcile`, { token: ids.adminToken, method: "POST", body: {} });
+  assert.equal(reconciled.data.withdrawal.status, "REJECTED");
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 10000);
+});
+
+integrationTest("signed provider webhook verifies latest state and reverses only once", async t => {
+  configureTestProvider(t);
+  const withdrawalId = await requestTestWithdrawal();
+  const entity = { id: "pout_TestWebhook", entity: "payout", reference_id: withdrawalId, amount: 1000, currency: "INR", mode: "UPI", status: "processing" };
+  mockProvider(t, async () => entity);
+  const path = `/admin/withdrawals/${withdrawalId}/razorpay-test`;
+  assert.equal((await api(path, { token: ids.adminToken, method: "POST", body: {} })).status, 200);
+  const raw = JSON.stringify({ event: "payout.processed", payload: { payout: { entity } } });
+  const signature = crypto.createHmac("sha256", process.env.RAZORPAYX_TEST_WEBHOOK_SECRET).update(raw).digest("hex");
+  const send = async signatureValue => fetch(`${baseUrl}/webhooks/razorpayx-test`, {
+    method: "POST", body: raw, headers: { "Content-Type": "application/json", "x-razorpay-signature": signatureValue }
+  });
+  assert.equal((await send("0".repeat(64))).status, 401);
+  entity.status = "failed"; // The latest provider result wins over the stale event's status.
+  assert.equal((await send(signature)).status, 200);
+  assert.equal((await send(signature)).status, 200);
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 10000);
+  assert.equal(await ids.WalletTransaction.countDocuments({ referenceId: withdrawalId, source: "RAZORPAYX_TEST_REVERSAL" }), 1);
+});
+
+integrationTest("mismatched provider payout cannot approve or refund a withdrawal", async t => {
+  configureTestProvider(t);
+  const withdrawalId = await requestTestWithdrawal();
+  mockProvider(t, async () => ({ id: "pout_TestMismatch", entity: "payout", reference_id: withdrawalId, amount: 999999, currency: "INR", mode: "UPI", status: "processed" }));
+  const response = await api(`/admin/withdrawals/${withdrawalId}/razorpay-test`, { token: ids.adminToken, method: "POST", body: {} });
+  assert.equal(response.status, 502);
+  assert.equal((await ids.Withdrawal.findOne({ withdrawalId })).status, "PROCESSING");
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 7600);
+});
