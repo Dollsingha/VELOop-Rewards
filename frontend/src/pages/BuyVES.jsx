@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Brand from "../components/Brand.jsx";
+import DemoCheckout from "../components/DemoCheckout.jsx";
 import api from "../services/api.js";
 
 let checkoutPromise;
@@ -135,6 +136,7 @@ export default function BuyVES() {
       <div><div className="eyebrow"><span className="eyebrow-dot" /> YOUR REWARDS</div><h1>Buy VES securely.</h1><p className="page-lead">VES is added only after the payment is verified by the server.</p></div>
       <Link className="button button-dark heading-action" to="/wallet">← Back to wallet</Link>
     </section>
+    <DemoCheckout />
     <section className="reference-dashboard" style={{ maxWidth: 760, margin: "24px auto", padding: 28 }}>
       <Link className="reference-wallet-brand" to="/"><Brand /></Link>
       <h2 style={{ marginTop: 24 }}>Choose a VES package</h2>
