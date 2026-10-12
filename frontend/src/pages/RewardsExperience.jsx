@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import api from "../services/api.js";
 import GoogleIdentityButton from "../components/GoogleIdentityButton.jsx";
+import WithdrawalBalanceNotice from "../components/WithdrawalBalanceNotice.jsx";
 import { clearSessionToken, saveSessionToken } from "../services/session.js";
 
 const number = value => Number(value || 0).toLocaleString("en-IN");
@@ -382,6 +383,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
               <div className="method-list">{methodsLoading ? <div className="wallet-gate">Loading payout methods…</div> : methods.length === 0 ? <div className="wallet-gate">No payout methods are currently available.</div> : methods.map(item => <button className={`method${method?.method === item.method ? " active-method" : ""}`} type="button" key={item.method} onClick={() => chooseMethod(item)}><i>{item.name?.slice(0, 1)?.toUpperCase() || "V"}</i><b>{item.name}<small>Sent securely to your payout details</small></b><span>{method?.method === item.method ? "✓" : ""}</span></button>)}</div>
               <label className="payout-options-label">SELECT AN AMOUNT</label>
               {optionsLoading ? <div className="wallet-gate">Loading payout options…</div> : options.length === 0 ? <div className="wallet-gate">No payout options are available for this method.</div> : <div className="amounts">{options.map(item => <button type="button" className={option?.methodId === item.methodId ? "active" : ""} key={item.methodId} onClick={() => chooseOption(item)} aria-pressed={option?.methodId === item.methodId}>{formatPayout(item)}<small>{number(item.requiredAmount)} VEs</small></button>)}</div>}
+              {option && <WithdrawalBalanceNotice walletBalance={wallet?.ves} requiredAmount={option.requiredAmount} />}
               {method && (method.requiredDetails || []).map(field => <label className="payout-detail-label" key={field.key}>{field.label.toUpperCase()}{field.required ? " *" : ""}<input className="design-input payout-input" required={field.required} type={["email", "tel", "number"].includes(field.inputType) ? field.inputType : "text"} pattern={method.method === "upi" && field.key === "upiId" ? "[A-Za-z0-9_.-]{2,}@[A-Za-z0-9.-]{2,}" : undefined} title={method.method === "upi" && field.key === "upiId" ? "Enter a valid UPI ID, such as name@bank." : undefined} value={payoutDetails[field.key] || ""} autoComplete="off" placeholder={`Enter ${field.label.toLowerCase()}`} onChange={event => { setPayoutDetails(current => ({ ...current, [field.key]: event.target.value })); setPayoutError(""); idempotencyKey.current = null; }} /></label>)}
               {method && method.requiredDetails?.length > 0 && <small className="hint">Enter the payout details required for this method.</small>}
               {option && <button className="button dark wide" type="submit" disabled={submitting || Boolean(payoutMessage)}>{submitting ? "Submitting request…" : "Review redemption"}<span>→</span></button>}
