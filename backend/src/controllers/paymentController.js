@@ -10,6 +10,7 @@ function razorpayClient() {
   if (!key_id || !key_secret) {
     throw httpError("Payments are not configured yet. Add Razorpay test keys in the server environment.", 503);
   }
+  if (!/^rzp_test_[A-Za-z0-9]+$/.test(key_id)) throw httpError("Only Razorpay test keys are supported for this assessment.", 503);
   return new Razorpay({ key_id, key_secret });
 }
 
