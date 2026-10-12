@@ -320,9 +320,9 @@ export default function RewardsExperience({ dashboardOnly = false }) {
         <b className="orb o1" /><b className="orb o2" />
       </section>}
 
-      {!dashboardOnly && !authenticated && <section className="section auth-inline-section" id="login">
+      {!dashboardOnly && <section className="section auth-inline-section" id="login">
         <div className="auth-inline-topbar"><a href="#home" aria-label="Back to home">‹</a><span>Login</span></div>
-        <h2 className="auth-inline-title">Login To Your Account</h2>
+        <h2 className="auth-inline-title">{authenticated ? "Your account is ready" : "Login To Your Account"}</h2>
         <div className="auth-inline-card">
           {!authenticated ? <>
             <div className="auth-inline-google auth-signup-google"><GoogleIdentityButton mode="login" theme="outline" width={184} onCredential={signInWithGoogle} onError={showGoogleError} /></div>
@@ -335,7 +335,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
               <div className="auth-inline-links"><a href="/register">Don’t have Account? Register</a></div>
               <button type="submit" disabled={loginLoading || googleLoading}>{loginLoading ? "Signing in…" : "Login"}</button>
             </form>
-          </> : <div className="auth-inline-signed-in"><b>✓ You’re signed in.</b><p>Your VELOop wallet is ready.</p><a href="#wallet">View wallet →</a><button type="button" onClick={signOut}>Sign out</button></div>}
+          </> : <div className="auth-inline-signed-in"><div className="auth-inline-status"><b><span aria-hidden="true">✓</span>You’re signed in.</b><p>Your VELOop wallet is ready.</p></div><div className="auth-inline-actions"><a href="#wallet">View wallet <span aria-hidden="true">→</span></a><button className="logout-button" type="button" onClick={signOut}>Sign out</button></div></div>}
         </div>
       </section>}
 
