@@ -1,5 +1,6 @@
 import "dotenv/config";
 import app from "./app.js";
+import PurchaseOrder from "./models/PurchaseOrder.js";
 import RazorpayTestPayout from "./models/RazorpayTestPayout.js";
 import { connectDB } from "./config/db.js";
 import { assertPayoutEncryptionKey } from "./utils/encryption.js";
@@ -11,6 +12,7 @@ try {
   assertPayoutEncryptionKey();
   await connectDB();
   await RazorpayTestPayout.createIndexes();
+  await PurchaseOrder.createIndexes();
   const streakConfig = await ensureStreakConfig();
   console.log(`Streak rewards configured: ${streakConfig.milestoneDays}-day milestone, ${streakConfig.milestoneRewardVES} VEs.`);
   app.listen(PORT, () => console.log(`API running on port ${PORT}`));
