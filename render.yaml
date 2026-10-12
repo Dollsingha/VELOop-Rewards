@@ -19,3 +19,9 @@ services:
         generateValue: true
       - key: PAYOUT_DETAILS_ENCRYPTION_KEY
         sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: VES_PURCHASE_PACKAGES
+        sync: false
