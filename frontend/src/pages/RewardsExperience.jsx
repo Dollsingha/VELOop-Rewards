@@ -52,6 +52,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
   const [methodsLoading, setMethodsLoading] = useState(false);
   const [optionsLoading, setOptionsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmingWithdrawal, setConfirmingWithdrawal] = useState(false);
   const requestInFlight = useRef(false);
   const idempotencyKey = useRef(null);
 
@@ -206,6 +207,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
   }
 
   function chooseMethod(selected) {
+    setConfirmingWithdrawal(false);
     setMethod(selected);
     setPayoutMessage("");
     setWithdrawalId("");
@@ -215,6 +217,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
   }
 
   function chooseOption(selected) {
+    setConfirmingWithdrawal(false);
     setOption(selected);
     setPayoutMessage("");
     setWithdrawalId("");
@@ -230,7 +233,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
       return;
     }
     if (wallet.ves < option.requiredAmount) {
-      setPayoutError(`You need ${number(option.requiredAmount - wallet.ves)} more VEs for this reward. Start with daily check-in in your wallet.`);
+      setPayoutError(`You need ${number(option.requiredAmount - wallet.ves)} more VEs for this reward. Only backend-credited rewards can be redeemed.`);
       return;
     }
     const fields = method.requiredDetails || [];
@@ -243,8 +246,11 @@ export default function RewardsExperience({ dashboardOnly = false }) {
       setPayoutError("Enter a valid UPI ID, such as name@bank.");
       return;
     }
-    const cost = Number(option.requiredAmount).toLocaleString("en-IN");
-    if (!window.confirm(`Confirm redemption of ${formatPayout(option)} for ${cost} VEs?`)) return;
+
+    if (!confirmingWithdrawal) {
+      setConfirmingWithdrawal(true);
+      return;
+    }
     requestInFlight.current = true;
     setSubmitting(true);
     setPayoutError("");
@@ -325,16 +331,18 @@ export default function RewardsExperience({ dashboardOnly = false }) {
       <section className="section" id="payout"><div className="heading"><div><small>05 / REDEEM REWARDS</small><h2>Make your rewards yours.</h2><p>A simple, reassuring payout selection flow.</p></div><label>PAYOUT SCREEN</label></div>
         <Notice error={payoutError} success={payoutMessage} />
         {payoutMessage && <div className="withdrawal-receipt" role="status"><b>Request {withdrawalId}</b><span>Current status: <strong>{withdrawalStatus}</strong> · {withdrawalStatus === "PENDING" ? "Your request is in the review queue." : "Check the wallet for its latest status."}</span><small>No external payout provider is connected to this assessment system.</small></div>}
+        {confirmingWithdrawal && !payoutMessage && <div className="withdrawal-receipt" role="status"><b>Review your withdrawal</b><span>{formatPayout(option)} requires {number(option.requiredAmount)} VEs. Confirming will deduct these VEs and create a pending request for review.</span><small>Payout destination: {Object.values(payoutDetails).join(" · ")}</small><button className="button" type="button" disabled={submitting} onClick={() => setConfirmingWithdrawal(false)}>Edit details</button></div>}
         <form className="payout layout" onSubmit={submitWithdrawal}>
-          <div className="fields"><div className="between"><a href="#wallet">← &nbsp; Wallet</a><small>STEP 1 OF 2</small></div><h3>Choose your reward.</h3><p>Pick an amount to redeem from your VE balance.</p>
+          <div className="fields"><div className="between"><a href="#wallet">← &nbsp; Wallet</a><small>{confirmingWithdrawal ? "STEP 2 OF 2" : "STEP 1 OF 2"}</small></div><h3>Choose your reward.</h3><p>Pick an amount to redeem from your VE balance.</p>
             {!authenticated ? <div className="wallet-gate">Sign in to load payout methods and options. <a href="/login">Go to login →</a></div> : <>
               <div className="method-list">{methodsLoading ? <div className="wallet-gate">Loading payout methods…</div> : methods.length === 0 ? <div className="wallet-gate">No payout methods are currently available.</div> : methods.map(item => <button className={`method${method?.method === item.method ? " active-method" : ""}`} type="button" key={item.method} onClick={() => chooseMethod(item)}><i>{item.name?.slice(0, 1)?.toUpperCase() || "V"}</i><b>{item.name}<small>Sent securely to your payout details</small></b><span>{method?.method === item.method ? "✓" : ""}</span></button>)}</div>
               <label className="payout-options-label">SELECT AN AMOUNT</label>
               {optionsLoading ? <div className="wallet-gate">Loading payout options…</div> : options.length === 0 ? <div className="wallet-gate">No payout options are available for this method.</div> : <div className="amounts">{options.map(item => <button type="button" className={option?.methodId === item.methodId ? "active" : ""} key={item.methodId} onClick={() => chooseOption(item)} aria-pressed={option?.methodId === item.methodId}>{formatPayout(item)}<small>{number(item.requiredAmount)} VEs</small></button>)}</div>}
               {option && <WithdrawalBalanceNotice walletBalance={walletLoading ? undefined : wallet?.ves} requiredAmount={option.requiredAmount} balanceError={walletError} />}
-              {method && (method.requiredDetails || []).map(field => <label className="payout-detail-label" key={field.key}>{field.label.toUpperCase()}{field.required ? " *" : ""}<input className="design-input payout-input" required={field.required} type={["email", "tel", "number"].includes(field.inputType) ? field.inputType : "text"} pattern={method.method === "upi" && field.key === "upiId" ? "[A-Za-z0-9_.-]{2,}@[A-Za-z0-9.-]{2,}" : undefined} title={method.method === "upi" && field.key === "upiId" ? "Enter a valid UPI ID, such as name@bank." : undefined} value={payoutDetails[field.key] || ""} autoComplete="off" placeholder={`Enter ${field.label.toLowerCase()}`} onChange={event => { setPayoutDetails(current => ({ ...current, [field.key]: event.target.value })); setPayoutError(""); idempotencyKey.current = null; }} /></label>)}
+              {option && <button className="button wide" type="button" disabled={walletLoading || submitting} onClick={() => loadWallet(page)}>{walletLoading ? "Refreshing balance…" : "Refresh available balance"}<span>↻</span></button>}
+              {method && (method.requiredDetails || []).map(field => <label className="payout-detail-label" key={field.key}>{field.label.toUpperCase()}{field.required ? " *" : ""}<input className="design-input payout-input" required={field.required} type={["email", "tel", "number"].includes(field.inputType) ? field.inputType : "text"} pattern={method.method === "upi" && field.key === "upiId" ? "[A-Za-z0-9_.-]{2,}@[A-Za-z0-9.-]{2,}" : undefined} title={method.method === "upi" && field.key === "upiId" ? "Enter a valid UPI ID, such as name@bank." : undefined} value={payoutDetails[field.key] || ""} autoComplete="off" placeholder={`Enter ${field.label.toLowerCase()}`} onChange={event => { setPayoutDetails(current => ({ ...current, [field.key]: event.target.value })); setPayoutError(""); setConfirmingWithdrawal(false); idempotencyKey.current = null; }} /></label>)}
               {method && method.requiredDetails?.length > 0 && <small className="hint">Enter the payout details required for this method.</small>}
-              {option && <button className="button dark wide" type="submit" disabled={submitting || walletLoading || !Number.isSafeInteger(wallet?.ves) || wallet.ves < option.requiredAmount || Boolean(payoutMessage)}>{submitting ? "Submitting request…" : walletLoading || !Number.isSafeInteger(wallet?.ves) ? "Waiting for wallet balance…" : wallet.ves < option.requiredAmount ? "Earn more VEs to redeem" : "Review redemption"}<span>→</span></button>}
+              {option && <button className="button dark wide" type="submit" disabled={submitting || walletLoading || Boolean(walletError) || !Number.isSafeInteger(wallet?.ves) || wallet.ves < option.requiredAmount || Boolean(payoutMessage)}>{submitting ? "Submitting request…" : walletError ? "Refresh wallet to continue" : walletLoading || !Number.isSafeInteger(wallet?.ves) ? "Waiting for wallet balance…" : wallet.ves < option.requiredAmount ? `Need ${number(option.requiredAmount - wallet.ves)} more VEs` : payoutMessage ? "Withdrawal request submitted" : confirmingWithdrawal ? "Confirm withdrawal" : "Review redemption"}<span>→</span></button>}
               <div className="secure">♧ &nbsp; Your payout details are protected</div>
             </>}
           </div>

@@ -126,7 +126,10 @@ export async function createWithdrawal({ userId, method, optionId, payoutDetails
     });
     return { duplicate: false, withdrawal: publicWithdrawal(withdrawal) };
   } catch (error) {
-    if (error?.code === 11000) {
+    // A transaction retry may see insufficient funds after the identical
+    // request commits and spends the remaining balance. Resolve that committed
+    // request by its user-scoped key and fingerprint before returning the error.
+    if (error?.code === 11000 || error?.statusCode === 400) {
       const racedDuplicate = await findDuplicate(userId, idempotencyKey, requestHash);
       if (racedDuplicate) return { duplicate: true, withdrawal: publicWithdrawal(racedDuplicate) };
     }

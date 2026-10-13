@@ -243,6 +243,72 @@ integrationTest("concurrent withdrawals cannot spend the same VEs twice", async 
   assert.equal(await ids.Withdrawal.countDocuments({ userId: ids.user }), 1);
 });
 
+integrationTest("simultaneous identical requests return one withdrawal even when the first spends all VEs", async () => {
+  await setVES(ids.user, 2400);
+  const request = { method: "POST", headers: { "Idempotency-Key": "same-key-concurrent-0001" },
+    body: { method: "upi", optionId: "upi_10", payoutDetails: { upiId: "qa@bank" } } };
+  const results = await Promise.all([api("/withdrawals", request), api("/withdrawals", request)]);
+  assert.ok(results.every(result => [200, 201].includes(result.status)), JSON.stringify(results));
+  assert.equal(new Set(results.map(result => result.data.withdrawal.withdrawalId)).size, 1);
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 0);
+  assert.equal(await ids.Withdrawal.countDocuments({ userId: ids.user }), 1);
+  assert.equal(await ids.WalletTransaction.countDocuments({ userId: ids.user, direction: "DEBIT" }), 1);
+});
+
+integrationTest("reusing a withdrawal key with changed details cannot cause another debit", async () => {
+  const headers = { "Idempotency-Key": "changed-details-key-0001" };
+  const body = { method: "upi", optionId: "upi_10", payoutDetails: { upiId: "qa@bank" } };
+  assert.equal((await api("/withdrawals", { method: "POST", headers, body })).status, 201);
+  const changed = await api("/withdrawals", { method: "POST", headers,
+    body: { ...body, payoutDetails: { upiId: "another@bank" } } });
+  assert.equal(changed.status, 409);
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 7600);
+  assert.equal(await ids.Withdrawal.countDocuments({ userId: ids.user }), 1);
+});
+
+integrationTest("manual approval requires processing and terminal states cannot refund or debit again", async () => {
+  const created = await api("/withdrawals", { method: "POST",
+    headers: { "Idempotency-Key": "manual-state-review-0001" },
+    body: { method: "upi", optionId: "upi_10", payoutDetails: { upiId: "qa@bank" } } });
+  const id = created.data.withdrawal.withdrawalId;
+  const review = action => api(`/admin/withdrawals/${id}/${action}`, { token: ids.adminToken, method: "POST", body: {} });
+  assert.equal((await review("approve")).status, 409);
+  assert.equal((await review("process")).data.withdrawal.status, "PROCESSING");
+  assert.equal((await review("approve")).data.withdrawal.status, "APPROVED");
+  assert.equal((await review("approve")).status, 409);
+  assert.equal((await review("reject")).status, 409);
+  assert.equal((await api(`/withdrawals/${id}/cancel`, { method: "POST" })).status, 409);
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 7600);
+  assert.equal(await ids.WalletTransaction.countDocuments({ userId: ids.user, type: "WITHDRAWAL_REVERSAL" }), 0);
+  assert.equal(await ids.AuditLog.countDocuments({ referenceId: id, action: "WITHDRAWAL_APPROVED" }), 1);
+});
+
+integrationTest("protected APIs reject missing, invalid and expired JWTs", async () => {
+  const { default: jwt } = await import("jsonwebtoken");
+  const expired = jwt.sign({ userId: String(ids.user) }, process.env.JWT_SECRET, { algorithm: "HS256", expiresIn: -1 });
+  for (const token of [null, "invalid-token", expired]) {
+    assert.equal((await api("/wallet", { token })).status, 401);
+    assert.equal((await api("/payout/methods", { token })).status, 401);
+    assert.equal((await api("/withdrawals", { token })).status, 401);
+  }
+});
+
+integrationTest("password login works and registration cannot grant an admin role", async () => {
+  const login = await api("/auth/login", { token: null, method: "POST",
+    body: { email: "user@test.local", password: "TestPassword123" } });
+  assert.equal(login.status, 200);
+  assert.equal((await api("/wallet", { token: login.data.token })).status, 200);
+  assert.equal((await api("/auth/login", { token: null, method: "POST",
+    body: { email: "user@test.local", password: "incorrect" } })).status, 401);
+  const registered = await api("/auth/register", { token: null, method: "POST",
+    body: { name: "QA role check", email: "role.check@example.test", password: "StrongEnough123", role: "ADMIN", ves: 999999 } });
+  assert.equal(registered.status, 201);
+  assert.equal(registered.data.user.role, "USER");
+  const wallet = await api("/wallet", { token: registered.data.token });
+  assert.equal(wallet.data.wallet.ves, 0);
+  assert.equal((await api("/admin/stats", { token: registered.data.token })).status, 403);
+});
+
 integrationTest("invalid payout option is rejected", async () => {
   const response = await api("/withdrawals", {
     method: "POST", headers: { "Idempotency-Key": "invalid-option-request-01" },
@@ -573,4 +639,33 @@ integrationTest("mismatched provider payout cannot approve or refund a withdrawa
   assert.equal(response.status, 502);
   assert.equal((await ids.Withdrawal.findOne({ withdrawalId })).status, "PROCESSING");
   assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 7600);
+});
+
+integrationTest("transaction pagination returns only the authenticated user's ledger", async () => {
+  for (let index = 0; index < 7; index++) {
+    assert.equal((await api("/admin/wallet/credit", { token: ids.adminToken, method: "POST",
+      body: { userId: String(ids.user), currency: "VES", amount: 1 } })).status, 201);
+  }
+  assert.equal((await api("/admin/wallet/credit", { token: ids.adminToken, method: "POST",
+    body: { userId: String(ids.other), currency: "VES", amount: 1 } })).status, 201);
+  const first = await api(`/wallet/transactions?page=1&limit=3&userId=${ids.other}`);
+  const second = await api("/wallet/transactions?page=2&limit=3");
+  assert.equal(first.data.total, 7);
+  assert.equal(first.data.pages, 3);
+  assert.equal(first.data.items.length, 3);
+  assert.equal(second.data.items.length, 3);
+  assert.ok(first.data.items.every(item => String(item.userId) === String(ids.user)));
+  assert.equal(new Set([...first.data.items, ...second.data.items].map(item => item.transactionId)).size, 6);
+});
+
+integrationTest("wallet rate limiting returns 429 for repeated requests", async () => {
+  let response;
+  for (let count = 0; count <= 1000; count++) {
+    response = await fetch(`${baseUrl}/wallet`);
+    if (response.status === 429) break;
+    assert.equal(response.status, 401);
+  }
+  assert.equal(response.status, 429);
+  assert.ok(response.headers.get("ratelimit"));
+  assert.match(await response.text(), /Too many requests/i);
 });
