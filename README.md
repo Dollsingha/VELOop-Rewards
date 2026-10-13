@@ -1,10 +1,20 @@
 # VELOop Rewards Wallet & Payout System
 
-A backend-focused MERN demonstration of a server-authoritative wallet, append-only transaction ledger, payout configuration, and safe withdrawal review. It is an independent development project; it must not connect to VELOop production credentials or databases.
+Backend-focused MERN implementation for the official Wallet & Payout assessment. The deployed frontend reads MongoDB-backed wallet balances, transaction history, payout configuration and withdrawal status through JWT-protected Express APIs.
 
-The repository-root `index.html` and `styles.css` are retained as a static design preview for GitHub Pages. The functional React app is in `frontend/` and requires the Express API and MongoDB described below; GitHub Pages alone does not run the wallet backend.
+**Submission scope:** wallet, ledger, payout selection and withdrawal review. Payment simulations, demo reward claiming, Buy VEs navigation and unrelated mining/staking previews are not part of the submission UI. See [SUBMISSION_READINESS.md](SUBMISSION_READINESS.md).
+
+- [Live application](https://veloop-rewards-dollsingha.onrender.com/login)
+- [Backend health endpoint](https://veloop-rewards-dollsingha.onrender.com/api/health)
+- [API documentation](API_DOCUMENTATION.md)
+- [Architecture](ARCHITECTURE.md)
+- [Test results](TESTING.md)
+
+This project uses the intern's own development database. Internal reward credits are not bank money. Withdrawal creation persists a pending request and safely deducts VEs; external UPI settlement is not configured or required by the specified final backend workflow.
 
 ## Technology
+
+Requires Node.js 22 or later. Development reload uses Node’s built-in `--watch` mode.
 
 - Node.js, Express.js, MongoDB, and Mongoose
 - React and Vite
@@ -68,7 +78,7 @@ Open `http://localhost:5173`.
 
 ### Optional: enable Google sign-up
 
-Google sign-up uses Google Identity Services in the browser and verifies the returned ID token on the API before creating or signing in to an account. Create an OAuth 2.0 **Web application** client in Google Cloud Console and add `http://localhost:5173` (and `http://127.0.0.1:5173` if you use that address) as an authorized JavaScript origin. Put the same web client ID in `GOOGLE_CLIENT_ID` in `backend/.env` and `VITE_GOOGLE_CLIENT_ID` in `frontend/.env`, then restart both development servers. No client secret is needed or should be added to this app. Without those values, the normal email/password sign-in remains available and the Google button shows a setup note.
+Google sign-up is optional and hidden by default until provider-side QA is complete. Set `VITE_GOOGLE_SIGN_IN_ENABLED=true` only after verifying the exact authorized origin and successful sign-in. Google sign-up uses Google Identity Services in the browser and verifies the returned ID token on the API before creating or signing in to an account. Create an OAuth 2.0 **Web application** client in Google Cloud Console and add `http://localhost:5173` (and `http://127.0.0.1:5173` if you use that address) as an authorized JavaScript origin. Put the same web client ID in `GOOGLE_CLIENT_ID` in `backend/.env` and `VITE_GOOGLE_CLIENT_ID` in `frontend/.env`, then restart both development servers. No client secret is needed or should be added to this app. Without those values, the normal email/password sign-in remains available and the Google button shows a setup note.
 
 ## Wallet and payout design
 
@@ -112,3 +122,16 @@ For a stable hosted demo URL, see [DEPLOYMENT.md](DEPLOYMENT.md). The Render Blu
 
 
 
+
+## Hosted evaluator account
+
+The official task requires seeded assessment data. Configure `ASSESSMENT_REVIEW_ENABLED=true`, `ASSESSMENT_DB_NAME` matching the independent development database, and private `ASSESSMENT_REVIEW_EMAIL`/`ASSESSMENT_REVIEW_PASSWORD` in Render. A dedicated USER account is created transactionally with 25,000 VEs, 5,000 SVEs, 100 Gems, 500 Tokens and 3 Spins, each accounted for in the ledger. Credentials are shared privately with the evaluator, never committed. Existing accounts are not overwritten and restarts do not reset balances. Disable the seed flag after provisioning.
+
+## Evaluation walkthrough
+
+1. Sign in with the private evaluator credentials.
+2. Open wallet and inspect backend balances and opening/reward ledger rows.
+3. Select Redeem, choose UPI ₹10 (2,400 VEs), enter a format-valid assessment UPI ID and confirm.
+4. Verify PENDING status, balance deduction and the corresponding debit row.
+5. Use the protected admin API/Postman in the development environment to review, reject or approve; rejection/cancellation records a reversal.
+6. Run `npm test` to reproduce the required security and concurrency scenarios.

@@ -5,6 +5,7 @@ import RazorpayTestPayout from "./models/RazorpayTestPayout.js";
 import { connectDB } from "./config/db.js";
 import { assertPayoutEncryptionKey } from "./utils/encryption.js";
 import { ensureStreakConfig } from "./services/streakConfigService.js";
+import { ensureAssessmentAccount } from "./services/assessmentSeedService.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -13,6 +14,7 @@ try {
   await connectDB();
   await RazorpayTestPayout.createIndexes();
   await PurchaseOrder.createIndexes();
+  await ensureAssessmentAccount();
   const streakConfig = await ensureStreakConfig();
   console.log(`Streak rewards configured: ${streakConfig.milestoneDays}-day milestone, ${streakConfig.milestoneRewardVES} VEs.`);
   app.listen(PORT, () => console.log(`API running on port ${PORT}`));

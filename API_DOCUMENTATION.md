@@ -114,3 +114,11 @@ Moves a pending or processing withdrawal to `REJECTED` and reverses the VE debit
 ## RazorpayX sandbox UPI payouts
 
 Admin-only routes: `GET /api/admin/payout-integration`, `POST /api/admin/withdrawals/:id/razorpay-test`, and `POST /api/admin/withdrawals/:id/razorpay-test/reconcile`. Signed raw-body webhook: `POST /api/webhooks/razorpayx-test`. Payout amounts come from the stored withdrawal; no live keys are accepted. See [sandbox setup](RAZORPAY_TEST_SETUP.md). Provider credentials and an actual sandbox run are still required before claiming external payout verification.
+
+## Submission authentication and evaluator data
+Email/password JWT login is the verified submission authentication method. Optional Google sign-in UI is gated by VITE_GOOGLE_SIGN_IN_ENABLED until provider-side verification is completed.
+
+The optional ASSESSMENT_REVIEW_* seed creates a dedicated USER-only reviewer account in the explicitly named development database. All opening credits are recorded with source ASSESSMENT_SEED. Existing accounts and balances are never reset. Seed values are assessment data, not production income.
+
+The old /api/payments/demo and /api/payments/demo/rewards simulation endpoints are not registered in the submission service.
+

@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import api from "../services/api.js";
 import GoogleIdentityButton from "../components/GoogleIdentityButton.jsx";
-import DemoWalletSummary from "../components/DemoWalletSummary.jsx";
 import WithdrawalBalanceNotice from "../components/WithdrawalBalanceNotice.jsx";
 import { clearSessionToken, saveSessionToken } from "../services/session.js";
 
@@ -19,45 +18,6 @@ function Notice({ error, success }) {
   if (error) return <div className="app-notice error" role="alert"><b>!</b><span>{error}</span></div>;
   if (success) return <div className="app-notice success" role="status" aria-live="polite"><b>✓</b><span>{success}</span></div>;
   return null;
-}
-
-function StakePreview() {
-  return <section className="section" id="stake">
-    <div className="heading"><div><small>03 / GROW YOUR REWARDS</small><h2>Stake &amp; Earn.</h2><p>A focused view of stake and reward progress.</p></div><label>ILLUSTRATIVE CONCEPT</label></div>
-    <div className="stake layout">
-      <div className="stake-hero"><div className="stake-top"><span className="feature-kicker">✧ &nbsp; VELOOP STAKING</span><span className="concept-chip">DESIGN PREVIEW</span></div>
-        <div className="stake-intro"><div><h3>Put your VEs<br />to work.</h3><p>Keep your stake and reward progress<br />clear in one place.</p></div>
-          <div className="stake-art" aria-hidden="true"><div className="stake-ring" /><div className="stake-coin coin-back">V</div><div className="stake-coin coin-front">V</div><i>✧</i></div></div>
-        <div className="stake-foot">◉ &nbsp; STAKE OVERVIEW <b>Platform reward concept</b></div>
-      </div>
-      <div className="stake-side"><small>YOUR STAKING · PREVIEW</small><h3>Rewards at a glance</h3>
-        <div className="stake-metrics"><article><span>Current stake</span><b>—</b></article><article><span>Rewards earned</span><b className="gold">—</b></article></div>
-        <div className="stake-progress-label"><span>Reward progress</span><b>Not configured</b></div><div className="stake-progress"><i /></div>
-        <p>Staking values and rules are not connected to this wallet.</p><div className="stake-action">Stake feature preview <b>↗</b></div>
-      </div>
-    </div>
-  </section>;
-}
-
-function MinePreview() {
-  return <section className="section" id="mine">
-    <div className="heading"><div><small>04 / EARNING SESSION</small><h2>Mine &amp; Earn.</h2><p>A focused session view with clear energy and upgrade controls.</p></div><label>SIMULATED FEATURE</label></div>
-    <div className="mine layout">
-      <div className="mine-scene"><div className="mine-scene-top"><span className="feature-kicker">✧ &nbsp; SESSION PREVIEW</span><span>ILLUSTRATIVE</span></div><div className="mine-grid" /><div className="mine-orbit orbit-one" /><div className="mine-orbit orbit-two" /><div className="mine-beam" />
-        <div className="mine-machine"><div className="machine-top">••• <span>V / 01</span></div><div className="machine-face"><i /><i /><strong>V</strong></div><div className="machine-base" /><div className="machine-glow" /></div>
-        <span className="mine-chip chip-one">⌁ &nbsp; ENERGY FLOW</span><span className="mine-chip chip-two">✧ &nbsp; SESSION PREVIEW</span>
-        <div className="mine-foot"><b>Earn in a session</b><span>SESSION WINDOW<strong>Preview only</strong></span></div>
-      </div>
-      <div className="mine-panel"><small>YOUR MINING SESSION · PREVIEW</small><h3>Keep your loop running.</h3>
-        <div className="session-state"><i>⌁</i><span><b>Session concept</b><small>Illustrative activity state</small></span><strong>↗</strong></div>
-        <div className="energy-title"><span>⌁ &nbsp; Session energy</span><b>Not connected</b></div><div className="energy-track"><i /></div>
-        <p className="energy-note">Energy and earning speed depend on platform settings.</p>
-        <div className="upgrade-title">SESSION UPGRADES <span>PREVIEW</span></div>
-        <div className="upgrade-grid"><article><i>↗</i><b>Speed boost<small>Upgrade concept</small></b></article><article><i>⌁</i><b>Recharge energy<small>Upgrade concept</small></b></article></div>
-        <div className="mine-disclaimer">ⓘ &nbsp; Simulated rewards feature. This does not mine real cryptocurrency.</div>
-      </div>
-    </div>
-  </section>;
 }
 
 export default function RewardsExperience({ dashboardOnly = false }) {
@@ -329,25 +289,6 @@ export default function RewardsExperience({ dashboardOnly = false }) {
         <b className="orb o1" /><b className="orb o2" />
       </section>}
 
-      {!dashboardOnly && <section className="section auth-inline-section" id="login">
-        <div className="auth-inline-topbar"><a href="#home" aria-label="Back to home">‹</a><span>Login</span></div>
-        <h2 className="auth-inline-title">{authenticated ? "Your account is ready" : "Login To Your Account"}</h2>
-        <div className="auth-inline-card">
-          {!authenticated ? <>
-            <div className="auth-inline-google auth-signup-google"><GoogleIdentityButton mode="login" theme="outline" width={184} onCredential={signInWithGoogle} onError={showGoogleError} /></div>
-            {googleLoading && <p className="auth-inline-working" role="status">Verifying your Google account…</p>}
-            <div className="auth-inline-divider"><span>OR</span></div>
-            <Notice error={loginError} />
-            <form className="auth-inline-form" onSubmit={signIn}>
-              <label htmlFor="member-email">Email :<input id="member-email" type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} required placeholder="Email" /></label>
-              <label htmlFor="member-password">Password :<input id="member-password" type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} required placeholder="Password" /></label>
-              <div className="auth-inline-links"><a href="/register">Don’t have Account? Register</a></div>
-              <button type="submit" disabled={loginLoading || googleLoading}>{loginLoading ? "Signing in…" : "Login"}</button>
-            </form>
-          </> : <div className="auth-inline-signed-in"><div className="auth-inline-status"><b><span aria-hidden="true">✓</span>You’re signed in.</b><p>Your VELOop wallet is ready.</p></div><div className="auth-inline-actions"><a href="#wallet">View wallet <span aria-hidden="true">→</span></a><button className="logout-button" type="button" onClick={signOut}>Sign out</button></div></div>}
-        </div>
-      </section>}
-
       <section className={`section${dashboardOnly ? " dashboard-wallet" : ""}`} id="wallet"><div className="heading"><div><small>{dashboardOnly ? "01 / MEMBER DASHBOARD" : "02 / YOUR REWARDS"}</small><h2>{dashboardOnly ? "Your rewards hub." : "Everything in one place."}</h2><p>{dashboardOnly ? "Your balance, daily streak, rewards and activity—all in one place." : "A quick view of your balance and recent activity."}</p></div><label>{dashboardOnly ? "PLAYER DASHBOARD" : "WALLET SCREEN"}</label></div>
         <div className="wallet layout"><aside><div className="brand"><span className="mark">V</span> VELOop</div><small>YOUR SPACE</small><p className="selected"><a href="#wallet">▦ &nbsp; Overview</a></p><p><a href="#activity">↻ &nbsp; Activity</a></p><p><a href="#payout">⇧ &nbsp; Redeem</a></p><div className="account">◉ &nbsp; {authenticated ? "Account secured" : "Sign in to continue"}</div></aside>
           <div className="dash"><div className="dashhead"><span>MEMBER REWARDS OVERVIEW<h3>Your wallet ✳</h3></span><b className="avatar">V</b></div>
@@ -355,7 +296,6 @@ export default function RewardsExperience({ dashboardOnly = false }) {
               <Notice error={walletError} />
               {walletLoading && !wallet && <div className="wallet-gate">Loading your wallet from the VELOop API…</div>}
               <div className="balance"><small>TOTAL REWARD BALANCE</small><strong>{wallet ? number(wallet.ves) : "—"} <i>VEs</i></strong><span>Balance loaded securely from your account.</span><b>V</b></div>
-              <DemoWalletSummary />
               <div className="streak"><div className="streak-copy"><small>DAILY EARNING STREAK</small><b>{streakLoading && !streak ? "Loading streak…" : `${number(streak?.currentStreak)} day${streak?.currentStreak === 1 ? "" : "s"} in a row`} <i>✦</i></b><span>{streak?.checkedInToday ? "Today's check-in is complete. Keep it going tomorrow." : "Check in once each day to build your streak."}{streak ? ` Best: ${number(streak.longestStreak)} days.` : ""}</span>
                 <button type="button" className="streak-checkin" disabled={!streak || !streak.canCheckIn || streakLoading || streakSubmitting} onClick={checkIn}>{streakSubmitting ? "Checking in…" : streak?.checkedInToday ? "Checked in today ✓" : "Daily check-in →"}</button>
                 <Notice error={streakError} success={streakMessage} />
@@ -381,8 +321,6 @@ export default function RewardsExperience({ dashboardOnly = false }) {
       </section>
 
       {!dashboardOnly && <>
-      <StakePreview />
-      <MinePreview />
 
       <section className="section" id="payout"><div className="heading"><div><small>05 / REDEEM REWARDS</small><h2>Make your rewards yours.</h2><p>A simple, reassuring payout selection flow.</p></div><label>PAYOUT SCREEN</label></div>
         <Notice error={payoutError} success={payoutMessage} />

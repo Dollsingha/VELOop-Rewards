@@ -7,6 +7,7 @@ import "./auth-reference.css";
 
 export default function AuthPage({ mode = "login" }) {
   const isSignup = mode === "signup";
+  const googleEnabled = import.meta.env.VITE_GOOGLE_SIGN_IN_ENABLED === "true";
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -124,10 +125,10 @@ export default function AuthPage({ mode = "login" }) {
               <h2 id="auth-title">{isSignup ? "Create your account" : "Welcome back"}</h2>
               <p>{isSignup ? "Create an account to keep your rewards in one place." : "Sign in to continue to your rewards wallet."}</p>
             </div>
-            <div className="auth-signup-google"><GoogleIdentityButton mode={mode} theme="outline" width={340} onCredential={signInWithGoogle} onError={showGoogleError} /></div>
+            {googleEnabled && <><div className="auth-signup-google"><GoogleIdentityButton mode={mode} theme="outline" width={340} onCredential={signInWithGoogle} onError={showGoogleError} /></div>
         <p className="auth-google-hint">Select Google to securely verify your account. Your VELOop wallet session is created only after Google verifies your account.</p>
         {googleLoading && <p className="auth-working" role="status">Verifying your Google account…</p>}
-        <div className="auth-or"><span>OR</span></div>
+        <div className="auth-or"><span>OR</span></div></>}
 
         <form className="reference-auth-form" onSubmit={submit}>
           {isSignup && <label htmlFor="auth-name">Full name

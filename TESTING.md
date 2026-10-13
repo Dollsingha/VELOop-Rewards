@@ -53,3 +53,15 @@ Run backend and frontend, sign in as the demo user, inspect the backend-loaded b
 ## Current environment note
 
 The integration suite requires the local Docker Compose MongoDB replica set to be running. Tests use only `veloop_wallet_test`; do not point them at production or the ordinary demo database.
+
+## Submission verification — 13 October 2026
+
+- 30 tests passed, 0 failed, 0 skipped against the separate local `veloop_wallet_test` replica-set database.
+- Required nine wallet/withdrawal scenarios passed.
+- Additional checks cover all five currencies with admin-only credits/debits and matching audit/ledger data, rollback on withdrawal persistence failure, and safe one-time evaluator account initialization.
+- Optional provider tests use isolated mocked responses; these do not claim a real Razorpay payment or bank transfer.
+- Frontend production build passed after removing simulations and unrelated previews.
+- `npm audit` reported zero vulnerabilities for both packages after the lockfile/development-watcher fixes.
+- Hosted UI and API verification is recorded in SUBMISSION_READINESS.md after deployment.
+
+

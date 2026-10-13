@@ -154,6 +154,41 @@ integrationTest("normal admin credit updates balance and creates a matching ledg
   assert.equal(response.data.transaction.balanceAfter, 1500);
 });
 
+integrationTest("all five wallet currencies support protected audited credits and debits", async () => {
+  const fields = { VES: "ves", SVES: "sves", GEMS: "gems", TOKENS: "tokens", SPINS: "spins" };
+  for (const [currency, field] of Object.entries(fields)) {
+    const before = (await ids.Wallet.findOne({ userId: ids.user }))[field];
+    const body = { userId: String(ids.user), currency, amount: 10, description: "Currency operation verification" };
+    const denied = await api("/admin/wallet/credit", { method: "POST", body });
+    assert.equal(denied.status, 403);
+    const credited = await api("/admin/wallet/credit", { token: ids.adminToken, method: "POST", body });
+    assert.equal(credited.status, 201);
+    assert.equal(credited.data.wallet[field], before + 10);
+    assert.equal(credited.data.transaction.balanceBefore, before);
+    assert.equal(credited.data.transaction.balanceAfter, before + 10);
+    const debited = await api("/admin/wallet/debit", { token: ids.adminToken, method: "POST", body: { ...body, amount: 3 } });
+    assert.equal(debited.status, 201);
+    assert.equal(debited.data.wallet[field], before + 7);
+    assert.equal(debited.data.transaction.balanceBefore, before + 10);
+    assert.equal(debited.data.transaction.balanceAfter, before + 7);
+  }
+  assert.equal(await ids.AuditLog.countDocuments({ action: "WALLET_CREDIT" }), 5);
+  assert.equal(await ids.AuditLog.countDocuments({ action: "WALLET_DEBIT" }), 5);
+});
+
+integrationTest("failure while creating withdrawal rolls back its debit and ledger", async t => {
+  t.mock.method(ids.Withdrawal, "create", async () => { throw new Error("Injected persistence failure"); });
+  const result = await api("/withdrawals", {
+    method: "POST", headers: { "Idempotency-Key": "rollback-verification-0001" },
+    body: { method: "upi", optionId: "upi_10", payoutDetails: { upiId: "qa@bank" } }
+  });
+  assert.equal(result.status, 500);
+  assert.equal(result.data.message, "Internal server error.");
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 10000);
+  assert.equal(await ids.WalletTransaction.countDocuments({ userId: ids.user }), 0);
+  assert.equal(await ids.Withdrawal.countDocuments({ userId: ids.user }), 0);
+});
+
 integrationTest("normal withdrawal uses configured VEs and writes a debit ledger row", async () => {
   await setVES(ids.user, 5000);
   const response = await api("/withdrawals", {
@@ -375,6 +410,48 @@ test("payout details are authenticated encrypted at rest", async () => {
   const encrypted = encryptPayoutDetails(original);
   assert.notEqual(encrypted, JSON.stringify(original));
   assert.deepEqual(decryptPayoutDetails(encrypted), original);
+});
+
+function assessmentEnvironment(t, email) {
+  const values = { ASSESSMENT_REVIEW_ENABLED: "true", ASSESSMENT_DB_NAME: mongoose.connection.name,
+    ASSESSMENT_REVIEW_EMAIL: email, ASSESSMENT_REVIEW_PASSWORD: "assessment-test-password-only-12345" };
+  const previous = Object.fromEntries(Object.keys(values).map(key => [key, process.env[key]]));
+  Object.assign(process.env, values);
+  t.after(() => Object.entries(previous).forEach(([key,value]) => value === undefined ? delete process.env[key] : process.env[key] = value));
+}
+
+integrationTest("assessment fixture creates all five balances with complete auditable ledgers once", async t => {
+  assessmentEnvironment(t, "assessment.review@example.test");
+  const { ensureAssessmentAccount } = await import("../src/services/assessmentSeedService.js");
+  assert.equal((await ensureAssessmentAccount()).created, true);
+  const user = await ids.User.findOne({ email: process.env.ASSESSMENT_REVIEW_EMAIL });
+  assert.equal(user.role, "USER");
+  const wallet = await ids.Wallet.findOne({ userId: user._id }).lean();
+  assert.deepEqual(Object.fromEntries(["ves","sves","gems","tokens","spins"].map(key => [key,wallet[key]])),
+    { ves: 25000, sves: 5000, gems: 100, tokens: 500, spins: 3 });
+  assert.equal(await ids.WalletTransaction.countDocuments({ userId: user._id }), 8);
+  assert.equal((await ensureAssessmentAccount()).created, false);
+  assert.equal(await ids.WalletTransaction.countDocuments({ userId: user._id }), 8);
+  assert.equal(await ids.AuditLog.countDocuments({ targetUserId: user._id, action: "ASSESSMENT_ACCOUNT_SEEDED" }), 1);
+});
+
+integrationTest("assessment fixture never overwrites an existing user account", async t => {
+  assessmentEnvironment(t, "user@test.local");
+  const { ensureAssessmentAccount } = await import("../src/services/assessmentSeedService.js");
+  await assert.rejects(ensureAssessmentAccount(), /already in use/);
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 10000);
+  assert.equal(await ids.WalletTransaction.countDocuments({ userId: ids.user }), 0);
+});
+
+integrationTest("assessment fixture is disabled by default and rejects the wrong database", async t => {
+  assessmentEnvironment(t, "assessment.review@example.test");
+  const { ensureAssessmentAccount } = await import("../src/services/assessmentSeedService.js");
+  process.env.ASSESSMENT_REVIEW_ENABLED = "false";
+  assert.equal(await ensureAssessmentAccount(), null);
+  process.env.ASSESSMENT_REVIEW_ENABLED = "true";
+  process.env.ASSESSMENT_DB_NAME = "not-the-connected-database";
+  await assert.rejects(ensureAssessmentAccount(), /matching development database/);
+  assert.equal(await ids.User.countDocuments(), 3);
 });
 
 function configureTestProvider(t) {
