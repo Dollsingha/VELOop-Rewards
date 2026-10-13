@@ -30,7 +30,7 @@ No client balance override or fabricated live credit was added. Normal new membe
 
 ## UI verification
 
-The final production React build passed. A separate loopback-only QA server uses `veloop_ui_qa_test` and assessment ledger fixtures. Password login navigated to dashboard; all five seeded balances and eight opening ledger rows loaded; the INR 10 redemption button enabled for the 25,000 VE account. Completion of the updated on-page confirmation flow is recorded after browser verification.
+The final production React build passed. A separate loopback-only QA server uses `veloop_ui_qa_test` and assessment ledger fixtures. Password login navigated to dashboard; all five seeded balances and eight opening ledger rows loaded; the INR 10 redemption button enabled for the 25,000 VE account. The updated on-page review step displayed the database payout and VE cost before confirmation. Two independently confirmed local QA requests produced two PENDING withdrawals, each with a matching 2,400 VE debit: 25,000 → 22,600 and 22,600 → 20,200. The UI refreshed the wallet and ledger, displayed the thank-you/pending receipt, and disabled repeat submission after success. These are isolated QA fixtures, not live account credits or real bank transfers.
 
 ## Limits
 
@@ -38,3 +38,6 @@ The final production React build passed. A separate loopback-only QA server uses
 - Optional provider tests use mocked sandbox responses. They do not verify a real Razorpay payout or bank settlement.
 - Seeded QA values exist only in isolated assessment databases and are not income or bank funds.
 - No claim of real UPI settlement is made; the required workflow creates a pending request and ledger debit for internal review.
+
+## Deployment
+Code revision 8d364450a6d2c2803f978934848ea40b7e627b29 deployed successfully to Render. Hosted frontend/backend installs each reported zero vulnerabilities, MongoDB connected to the independent development database, and the API started successfully. Live verification passed: the zero-balance account shows “Need 2,400 more VEs”; Refresh available balance enters the loading state and then restores the authoritative balance/shortfall. The stale home-page 502 recovered after reloading the deployed site. Backend and frontend npm audits also reported 0 vulnerabilities.
