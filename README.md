@@ -14,7 +14,7 @@ This project uses the intern's own development database. Internal reward credits
 
 ## Technology
 
-Requires Node.js 22 or later. Development reload uses Node’s built-in `--watch` mode.
+Requires Node.js 24.x (the validated deployment runtime). Development reload uses Node’s built-in `--watch` mode.
 
 - Node.js, Express.js, MongoDB, and Mongoose
 - React and Vite

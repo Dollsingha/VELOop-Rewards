@@ -44,11 +44,14 @@ Opening balances: 25,000 VEs; 5,000 SVEs; 100 Gems; 500 Tokens; 3 Spins. These a
 - Backend lockfile repaired for reproducible installation.
 - Node built-in watch mode replaces the development-only vulnerable nodemon dependency.
 
-Final test count and hosted checks are recorded after the last validation.
+Final local integration result: 30 passed, 0 failed, 0 skipped.
 
 Final local result: 30 tests passed, 0 failed, 0 skipped. Both package audits reported 0 vulnerabilities. Production frontend build passed. Hosted verification follows the deployment.
 
 
 ## Hosted verification
-Commit 7634f203d80a963f91d26ae323b619e891557117 deployed successfully on Render. Verified MongoDB development connection, healthy API, authenticated wallet loading, all eight UPI options, no simulator sections or mining/staking previews, and zero-balance withdrawal guard. Unauthenticated wallet and payout endpoints return 401. No bank settlement or Google login is claimed. The optional evaluator initializer is implemented and locally tested; it is not enabled on the hosted service. Render's cached npm install reported a frontend advisory despite the repaired lockfile; build configuration is changed to npm ci for reproducible clean installs.
+Commit 7634f203d80a963f91d26ae323b619e891557117 deployed successfully on Render. Verified MongoDB development connection, healthy API, authenticated wallet loading, all eight UPI options, no simulator sections or mining/staking previews, and zero-balance withdrawal guard. Unauthenticated wallet and payout endpoints return 401. No bank settlement or Google login is claimed. The optional evaluator initializer is implemented and locally tested; it is not enabled on the hosted service. A later build uses an explicit package-prefix script, Node 24 and a pinned patched source-map-js override. The clean npm ci variant failed on the host; that variant is not the active build configuration.
 
+
+## Final live checks
+Render deployment of d8b73484751accb2dc9d40e1066e12804c3aad26 succeeded and is Live. Hosted frontend and backend installs both reported 0 vulnerabilities. Verified signup and password login using dedicated zero-balance QA users, JWT own-wallet access, all eight database-backed UPI options, invalid-option rejection, and rejection of insufficient balance even with forged client amounts/currency/balance. Both rejected requests left all wallet currencies unchanged. Authenticated simulation endpoint returns 404. Existing signed-in users visiting /login are redirected to /dashboard. Normal funded withdrawal, duplicate/concurrent requests and rejection/cancellation reversal are covered by the local integration suite; no external bank payout has been executed. The evaluator initializer is optional and remains disabled on the host.
