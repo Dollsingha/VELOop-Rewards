@@ -48,3 +48,7 @@ Final test count and hosted checks are recorded after the last validation.
 
 Final local result: 30 tests passed, 0 failed, 0 skipped. Both package audits reported 0 vulnerabilities. Production frontend build passed. Hosted verification follows the deployment.
 
+
+## Hosted verification
+Commit 7634f203d80a963f91d26ae323b619e891557117 deployed successfully on Render. Verified MongoDB development connection, healthy API, authenticated wallet loading, all eight UPI options, no simulator sections or mining/staking previews, and zero-balance withdrawal guard. Unauthenticated wallet and payout endpoints return 401. No bank settlement or Google login is claimed. The optional evaluator initializer is implemented and locally tested; it is not enabled on the hosted service. Render's cached npm install reported a frontend advisory despite the repaired lockfile; build configuration is changed to npm ci for reproducible clean installs.
+
