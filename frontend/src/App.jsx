@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import RewardsExperience from "./pages/RewardsExperience.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
+import WalletAdmin from "./pages/WalletAdmin.jsx";
 import api from "./services/api.js";
 import { authChangeEvent, clearSessionToken } from "./services/session.js";
 
@@ -74,6 +75,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="signup" />} />
+      <Route path="/admin/wallet" element={<WalletAdmin />} />
       <Route path="/buy-ves" element={<Navigate to="/wallet" replace />} />
       <Route path="*" element={<ExperienceRoute />} />
     </Routes>

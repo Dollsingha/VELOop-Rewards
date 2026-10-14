@@ -135,3 +135,12 @@ The official task requires seeded assessment data. Configure `ASSESSMENT_REVIEW_
 4. Verify PENDING status, balance deduction and the corresponding debit row.
 5. Use the protected admin API/Postman in the development environment to review, reject or approve; rejection/cancellation records a reversal.
 6. Run `npm test` to reproduce the required security and concurrency scenarios.
+
+## Wallet workflow without a payment gateway
+
+- Members sign in, view their server balances and ledger, and select a database-configured redemption option. New accounts start at zero; no automatic top-up or cash purchase is implied.
+- An existing authorized administrator can open `/admin/wallet`, enter the member user ID shown in their wallet, select one of the five currencies, and review and confirm a reward credit/debit. Every change uses the existing transactional backend and ledger/audit APIs.
+- Admin access is checked on the server. Registration cannot create an admin. Provision an administrator only through your existing controlled development setup; never promote a user from the browser.
+- Withdrawal creation deducts rewards atomically and records PENDING. Admins can move PENDING to PROCESSING and then APPROVED, or reject PENDING/PROCESSING with a reason. Members can cancel PENDING requests. Rejection/cancellation return the deducted rewards once.
+- APPROVED means internal approval only. No UPI collection or bank settlement occurs. No payment-provider credentials are needed for this internal workflow.
+- Admin forms require on-page confirmation and prevent simultaneous submissions. Wallet credits/debits are separate intentional operations, not idempotent retries: if a response is lost, check the member ledger before repeating a change.

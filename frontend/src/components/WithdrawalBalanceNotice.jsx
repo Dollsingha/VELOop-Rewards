@@ -16,6 +16,6 @@ export default function WithdrawalBalanceNotice({ walletBalance, requiredAmount,
     <div><span>Required for this reward</span><b>{amount(requiredAmount)} VEs</b></div>
     <p>{shortfall ? `You need ${amount(shortfall)} more VEs before requesting this withdrawal.` : "Your wallet has enough VEs to request this reward."}</p>
     {shortfall > 0 && <><small>Only rewards credited by the backend are available for redemption.</small><a href="#wallet">View wallet &amp; reward history →</a></>}
-    <small>The backend validates your balance when you submit. A withdrawal request goes through review before a payout is confirmed.</small>
+    <small>The backend validates your balance when you submit. A withdrawal request goes through internal review. Approval does not transfer money to a bank account.</small>
   </div>;
 }

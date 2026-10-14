@@ -59,3 +59,14 @@ The functional-access fixes were reviewed again. Production startup now explicit
 
 
 Final verification: all 38 tests passed; production frontend build passed. Revision 9df422a89170f76a0d92fbec653cade215ddb96f is Live on Render. Both hosted package installs reported 0 vulnerabilities; startup connected to the development database and served the API after required index creation. Public health returned 200; unauthenticated wallet/payout methods returned 401. Live dashboard sidebar Redeem navigated to /payout#payout; live Wallet navigation is present. At a 320px live viewport the full eight-option payout page measured scrollWidth=clientWidth=305, without horizontal overflow. Google provider sign-in and real bank settlement remain outside the verified flow.
+
+## 14 October 2026: wallet administration without a payment gateway
+
+- Added `/admin/wallet`, backed by existing admin-only Express endpoints. No account roles or live balances were changed.
+- Production React build passed; all 38 backend integration tests passed again.
+- Actual browser QA used a separate loopback-only database `veloop_admin_ui_test`. Admin credit: 0 → 3,000 VEs, with matching ledger. Member withdrawal: 3,000 → 600 VEs and PENDING request for 2,400 VEs. Admin rejection: REJECTED and one reversal, 600 → 3,000 VEs. Database read confirmed all three ledger rows.
+- Ordinary member access to the admin page was rejected by the backend. Review confirmations appeared within the page. Rejected history displayed the reason and no further terminal actions.
+- Admin page at 320px viewport: document clientWidth and scrollWidth both 305px (no horizontal overflow).
+- Clarified member copy: internal approval is not bank settlement; buying VEs/automatic UPI transfer is not enabled.
+- No real bank transaction or Google authentication was verified by this pass.
+
