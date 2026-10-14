@@ -144,3 +144,9 @@ The official task requires seeded assessment data. Configure `ASSESSMENT_REVIEW_
 - Withdrawal creation deducts rewards atomically and records PENDING. Admins can move PENDING to PROCESSING and then APPROVED, or reject PENDING/PROCESSING with a reason. Members can cancel PENDING requests. Rejection/cancellation return the deducted rewards once.
 - APPROVED means internal approval only. No UPI collection or bank settlement occurs. No payment-provider credentials are needed for this internal workflow.
 - Admin forms require on-page confirmation and prevent simultaneous submissions. Wallet credits/debits are separate intentional operations, not idempotent retries: if a response is lost, check the member ledger before repeating a change.
+
+### One-time development withdrawal test credit
+
+An operator with existing server/database access can run `backend/scripts/grant-development-credit.mjs` with `--database`, `--user-id`, `--amount`, `--reference` and the explicit `--allow-development-credit` flag. It uses the server MONGO_URI, requires an exact database-name match, an active existing member, and a positive whole amount capped at 25,000 VEs. It never creates/promotes accounts, resets balances, or exposes a member credit endpoint.
+
+The credit and audit marker commit together in a MongoDB transaction. A deterministic unique audit ID prevents repeats of the same reference, including concurrent execution; changed member/amount with the same reference fails. The ledger labels these as development test credits, not cash purchases. This utility is not part of the default start command. Remove any temporary operator invocation after running it.
