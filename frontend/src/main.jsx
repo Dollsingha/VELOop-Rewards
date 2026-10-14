@@ -6,6 +6,7 @@ import "../design-only/styles.css";
 import "./functional.css";
 import "./premium.css";
 import "./member-access.css";
+import "./wallet-polish.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

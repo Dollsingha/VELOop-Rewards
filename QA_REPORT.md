@@ -70,3 +70,10 @@ Final verification: all 38 tests passed; production frontend build passed. Revis
 - Clarified member copy: internal approval is not bank settlement; buying VEs/automatic UPI transfer is not enabled.
 - No real bank transaction or Google authentication was verified by this pass.
 
+## Wallet and payout UI refinement — 14 October 2026
+
+- Added an external, scoped `wallet-polish.css` stylesheet: readable dark cards, larger balance and transaction typography, unified actions, clear request status badges, and responsive sidebar/card layouts.
+- Added prominent Redeem/Refresh actions and a native expandable wallet guide. No financial values were moved to client storage.
+- Fixed section positioning after asynchronous wallet loads: direct payout navigation now places the payout heading below the sticky navigation (verified local heading top 120px, navigation bottom 76px).
+- Actual browser layout measurements passed for both dashboard and payout at 320, 768 and 1366 viewport widths: clientWidth matched scrollWidth at 305, 753 and 1351 pixels.
+- Visual review caught dark Pending review text in the existing summary card; the new stylesheet explicitly supplies a light foreground. Production frontend build passed. This UI pass does not verify external payment settlement or Google sign-in.

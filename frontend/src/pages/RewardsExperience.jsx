@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import api from "../services/api.js";
 import GoogleIdentityButton from "../components/GoogleIdentityButton.jsx";
 import WithdrawalBalanceNotice from "../components/WithdrawalBalanceNotice.jsx";
@@ -22,6 +22,8 @@ function Notice({ error, success }) {
 
 export default function RewardsExperience({ dashboardOnly = false }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const positionedRoute = useRef("");
   const [authenticated, setAuthenticated] = useState(Boolean(localStorage.getItem("veloop_token")));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,6 +60,25 @@ export default function RewardsExperience({ dashboardOnly = false }) {
   const cancelInFlight = useRef(false);
   const requestInFlight = useRef(false);
   const idempotencyKey = useRef(null);
+
+  // Position the destination after async wallet content has established its
+  // height; scrolling before it loads can land above the payout section.
+  useEffect(() => {
+    const routeKey = `${location.key}:${location.pathname}:${location.hash}`;
+    if (positionedRoute.current === routeKey) return;
+    const targetId = location.hash.slice(1) || ({ "/wallet": "wallet", "/payout": "payout", "/dashboard": "wallet" }[location.pathname]);
+    if (!targetId) return;
+    if (authenticated && (walletLoading || (!wallet && !walletError))) return;
+    if (targetId === "payout" && (methodsLoading || optionsLoading)) return;
+    const frame = requestAnimationFrame(() => {
+      const target = document.getElementById(targetId);
+      if (target) {
+        target.scrollIntoView({ behavior: "instant", block: "start" });
+        positionedRoute.current = routeKey;
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [location.key, location.pathname, location.hash, authenticated, walletLoading, wallet, walletError, methodsLoading, optionsLoading]);
 
   const loadWallet = useCallback(async (requestedPage = 1) => {
     setWalletLoading(true);
@@ -321,7 +342,8 @@ export default function RewardsExperience({ dashboardOnly = false }) {
               <Notice error={walletError} />
               {walletLoading && !wallet && <div className="wallet-gate">Loading your wallet from the VELOop API…</div>}
               <div className="balance"><small>TOTAL REWARD BALANCE</small><strong>{wallet ? number(wallet.ves) : "—"} <i>VEs</i></strong><span>Balance loaded securely from your account.</span><b>V</b></div>
-              <div className="wallet-gate"><b>How your wallet works</b><p>Rewards enter this wallet through authorized backend credits. Buying VEs and automatic UPI transfers are not enabled. New accounts start at zero.</p>{wallet?.userId && <small>Your member ID: {wallet.userId}</small>}<p>Withdrawals deduct VEs when submitted. Rejected or cancelled requests return those VEs to your wallet.</p></div>
+              <div className="wallet-quick-actions"><a className="button" href={dashboardOnly ? "/payout#payout" : "#payout"}>Redeem rewards ↗</a><button type="button" className="button" disabled={walletLoading} onClick={() => loadWallet(page)}>{walletLoading ? "Refreshing…" : "Refresh wallet ↻"}</button></div>
+              <details className="wallet-guide"><summary>How rewards &amp; withdrawals work</summary><p>Rewards enter this wallet through authorized backend credits. Buying VEs and automatic UPI transfers are not enabled. New accounts start at zero.</p>{wallet?.userId && <small>Your member ID: {wallet.userId}</small>}<p>Withdrawals deduct VEs when submitted. Rejected or cancelled requests return those VEs to your wallet.</p></details>
               <div className="streak"><div className="streak-copy"><small>DAILY EARNING STREAK</small><b>{streakLoading && !streak ? "Loading streak…" : `${number(streak?.currentStreak)} day${streak?.currentStreak === 1 ? "" : "s"} in a row`} <i>✦</i></b><span>{streak?.checkedInToday ? "Today's check-in is complete. Keep it going tomorrow." : "Check in once each day to build your streak."}{streak ? ` Best: ${number(streak.longestStreak)} days.` : ""}</span>
                 <button type="button" className="streak-checkin" disabled={!streak || !streak.canCheckIn || streakLoading || streakSubmitting} onClick={checkIn}>{streakSubmitting ? "Checking in…" : streak?.checkedInToday ? "Checked in today ✓" : "Daily check-in →"}</button>
                 <Notice error={streakError} success={streakMessage} />
@@ -338,7 +360,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
               {walletLoading && transactions.length === 0 ? <div className="wallet-gate">Loading transactions…</div> : transactions.length === 0 ? <div className="wallet-gate">Your wallet activity will appear here after a balance change.</div> : transactions.map(item => <div className="row" key={item.transactionId}><i className={item.direction === "CREDIT" ? "row-credit" : "row-debit"}>{item.direction === "CREDIT" ? "↙" : "↗"}</i><span><b>{item.description || String(item.type).replaceAll("_", " ")}</b><small>{String(item.type).replaceAll("_", " ")} · {formatDate(item.createdAt)}</small></span><strong className={item.direction === "CREDIT" ? "green" : ""}>{item.direction === "CREDIT" ? "+" : "−"}{number(item.amount)} {item.currency}</strong></div>)}
               <div className="wallet-pagination"><span>Page <b>{page}</b> of {pages}</span><span><button type="button" disabled={walletLoading || page <= 1} onClick={() => setPage(value => value - 1)}>← Previous</button><button type="button" disabled={walletLoading || page >= pages} onClick={() => setPage(value => value + 1)}>Next →</button></span></div>
               <div className="wallet-requests"><div className="activity"><b>Your payout requests</b><button type="button" disabled={walletLoading} onClick={() => loadWallet(page)}>Refresh status ↻</button></div>
-                {withdrawals.length === 0 ? <p className="wallet-gate">No payout requests yet. Your request status will appear here.</p> : withdrawals.map(item => <div className="row" key={item.withdrawalId}><i className="row-debit">↗</i><span><b>{item.method.toUpperCase()} · {formatDate(item.requestedAt || item.createdAt)}</b><small>{item.withdrawalId}</small>{item.status === "PENDING" && <div>{cancelReviewId === item.withdrawalId ? <><small>Cancel this request and return its VEs to your wallet?</small><button className="button" type="button" disabled={Boolean(cancellingId)} onClick={() => cancelPendingWithdrawal(item.withdrawalId)}>{cancellingId === item.withdrawalId ? "Cancelling…" : "Confirm cancellation"}</button><button className="button" type="button" disabled={Boolean(cancellingId)} onClick={() => setCancelReviewId("")}>Keep request</button></> : <button className="button" type="button" disabled={Boolean(cancellingId)} onClick={() => setCancelReviewId(item.withdrawalId)}>Cancel pending request</button>}</div>}</span><strong>{new Intl.NumberFormat("en-IN", { style: "currency", currency: item.payoutCurrency || "INR", maximumFractionDigits: 2 }).format(item.payoutAmount)} · {item.status}</strong></div>)}
+                {withdrawals.length === 0 ? <p className="wallet-gate">No payout requests yet. Your request status will appear here.</p> : withdrawals.map(item => <div className="row" key={item.withdrawalId}><i className="row-debit">↗</i><span><b>{item.method.toUpperCase()} · {formatDate(item.requestedAt || item.createdAt)}</b><small>{item.withdrawalId}</small>{item.status === "PENDING" && <div>{cancelReviewId === item.withdrawalId ? <><small>Cancel this request and return its VEs to your wallet?</small><button className="button" type="button" disabled={Boolean(cancellingId)} onClick={() => cancelPendingWithdrawal(item.withdrawalId)}>{cancellingId === item.withdrawalId ? "Cancelling…" : "Confirm cancellation"}</button><button className="button" type="button" disabled={Boolean(cancellingId)} onClick={() => setCancelReviewId("")}>Keep request</button></> : <button className="button" type="button" disabled={Boolean(cancellingId)} onClick={() => setCancelReviewId(item.withdrawalId)}>Cancel pending request</button>}</div>}</span><strong>{new Intl.NumberFormat("en-IN", { style: "currency", currency: item.payoutCurrency || "INR", maximumFractionDigits: 2 }).format(item.payoutAmount)}<br /><span className={`request-status ${String(item.status).toLowerCase()}`}>{item.status}</span></strong></div>)}
               </div>
               <div className="callout"><b>Ready to redeem?<small>Turn your rewards into something useful.</small></b><a href={dashboardOnly ? "/payout#payout" : "#payout"} className="button lime">Explore payouts &nbsp; →</a></div>
             </>}
@@ -366,7 +388,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
               <div className="secure">♧ &nbsp; Your payout details are protected</div>
             </>}
           </div>
-          <aside className="summary"><small>REDEMPTION SUMMARY</small>{option ? <><strong>{formatPayout(option)}</strong><p>{method?.name}</p><hr /><div>Rewards to redeem<b>{number(option.requiredAmount)} VEs</b></div><div>Processing fee<b>Not configured</b></div><hr /><div>You’ll receive<b>{formatPayout(option)}</b></div><blockquote>◷ &nbsp; <span><b>Pending review</b><small>Request status appears in your wallet.</small></span></blockquote></> : <div className="summary-empty"><span>✳</span><b>Select a reward</b><small>Your redemption summary appears here.</small></div>}</aside>
+          <aside className="summary"><small>REDEMPTION SUMMARY</small>{option ? <><strong>{formatPayout(option)}</strong><p>{method?.name}</p><hr /><div>Rewards to redeem<b>{number(option.requiredAmount)} VEs</b></div><div>Processing fee<b>Not configured</b></div><hr /><div>Requested payout<b>{formatPayout(option)}</b></div><blockquote>◷ &nbsp; <span><b>Pending review</b><small>Request status appears in your wallet.</small></span></blockquote></> : <div className="summary-empty"><span>✳</span><b>Select a reward</b><small>Your redemption summary appears here.</small></div>}</aside>
         </form>
       </section></>}
     </main>

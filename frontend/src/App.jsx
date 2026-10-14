@@ -8,16 +8,6 @@ import { authChangeEvent, clearSessionToken } from "./services/session.js";
 
 function ExperienceRoute() {
   const location = useLocation();
-
-  useEffect(() => {
-    const targetId = location.hash.slice(1) || ({ "/": "wallet", "/login": "login", "/wallet": "wallet", "/payout": "payout" }[location.pathname]);
-    if (!targetId) {
-      if (location.pathname === "/dashboard") window.scrollTo({ top: 0, behavior: "instant" });
-      return;
-    }
-    requestAnimationFrame(() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" }));
-  }, [location.pathname, location.hash]);
-
   return <RewardsExperience dashboardOnly={location.pathname === "/dashboard"} />;
 }
 
