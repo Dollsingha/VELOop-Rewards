@@ -65,6 +65,7 @@ export default function App() {
       <nav className={menuOpen ? "is-open" : ""} id="primary-navigation" aria-label="Main navigation">
         {authStatus === "signed-in" ? <button className="nav-auth-action" type="button" onClick={() => { closeMenu(); signOut(); }}>Sign out</button> : authStatus === "checking" ? <span className="nav-auth-status" role="status">Checking session…</span> : authStatus === "unknown" ? <span className="nav-auth-status" role="status">Session check unavailable</span> : <Link onClick={closeMenu} to="/login">Login</Link>}
         <Link onClick={closeMenu} to="/dashboard#wallet">Dashboard</Link>
+        <Link onClick={closeMenu} to="/wallet#wallet">Wallet</Link>
         <Link onClick={closeMenu} to="/payout#payout">Payout</Link>
       </nav>
       <b className="tag"><i /> MEMBER REWARDS</b>

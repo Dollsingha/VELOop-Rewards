@@ -53,6 +53,9 @@ export default function RewardsExperience({ dashboardOnly = false }) {
   const [optionsLoading, setOptionsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirmingWithdrawal, setConfirmingWithdrawal] = useState(false);
+  const [cancelReviewId, setCancelReviewId] = useState("");
+  const [cancellingId, setCancellingId] = useState("");
+  const cancelInFlight = useRef(false);
   const requestInFlight = useRef(false);
   const idempotencyKey = useRef(null);
 
@@ -273,6 +276,22 @@ export default function RewardsExperience({ dashboardOnly = false }) {
     }
   }
 
+  async function cancelPendingWithdrawal(withdrawalId) {
+    if (cancelInFlight.current) return;
+    cancelInFlight.current = true;
+    setCancellingId(withdrawalId);
+    try {
+      await api.post(`/withdrawals/${withdrawalId}/cancel`, {});
+      setCancelReviewId("");
+      await loadWallet(page);
+    } catch (error) {
+      setWalletError(error.response?.data?.message || "Cancellation failed. Refresh your request status and try again.");
+    } finally {
+      cancelInFlight.current = false;
+      setCancellingId("");
+    }
+  }
+
   return <>
     <main id="home" className={dashboardOnly ? "dashboard-only" : undefined}>
       {!dashboardOnly && <section className="hero">
@@ -296,7 +315,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
       </section>}
 
       <section className={`section${dashboardOnly ? " dashboard-wallet" : ""}`} id="wallet"><div className="heading"><div><small>{dashboardOnly ? "01 / MEMBER DASHBOARD" : "02 / YOUR REWARDS"}</small><h2>{dashboardOnly ? "Your rewards hub." : "Everything in one place."}</h2><p>{dashboardOnly ? "Your balance, daily streak, rewards and activity—all in one place." : "A quick view of your balance and recent activity."}</p></div><label>{dashboardOnly ? "PLAYER DASHBOARD" : "WALLET SCREEN"}</label></div>
-        <div className="wallet layout"><aside><div className="brand"><span className="mark">V</span> VELOop</div><small>YOUR SPACE</small><p className="selected"><a href="#wallet">▦ &nbsp; Overview</a></p><p><a href="#activity">↻ &nbsp; Activity</a></p><p><a href="#payout">⇧ &nbsp; Redeem</a></p><div className="account">◉ &nbsp; {authenticated ? "Account secured" : "Sign in to continue"}</div></aside>
+        <div className="wallet layout"><aside><div className="brand"><span className="mark">V</span> VELOop</div><small>YOUR SPACE</small><p className="selected"><a href="#wallet">▦ &nbsp; Overview</a></p><p><a href="#activity">↻ &nbsp; Activity</a></p><p><a href={dashboardOnly ? "/payout#payout" : "#payout"}>⇧ &nbsp; Redeem</a></p><div className="account">◉ &nbsp; {authenticated ? "Account secured" : "Sign in to continue"}</div></aside>
           <div className="dash"><div className="dashhead"><span>MEMBER REWARDS OVERVIEW<h3>Your wallet ✳</h3></span><b className="avatar">V</b></div>
             {!authenticated ? <div className="wallet-gate"><b>Sign in to view your wallet.</b><a href="/login">Go to member sign in →</a></div> : <>
               <Notice error={walletError} />
@@ -318,7 +337,7 @@ export default function RewardsExperience({ dashboardOnly = false }) {
               {walletLoading && transactions.length === 0 ? <div className="wallet-gate">Loading transactions…</div> : transactions.length === 0 ? <div className="wallet-gate">Your wallet activity will appear here after a balance change.</div> : transactions.map(item => <div className="row" key={item.transactionId}><i className={item.direction === "CREDIT" ? "row-credit" : "row-debit"}>{item.direction === "CREDIT" ? "↙" : "↗"}</i><span><b>{item.description || String(item.type).replaceAll("_", " ")}</b><small>{String(item.type).replaceAll("_", " ")} · {formatDate(item.createdAt)}</small></span><strong className={item.direction === "CREDIT" ? "green" : ""}>{item.direction === "CREDIT" ? "+" : "−"}{number(item.amount)} {item.currency}</strong></div>)}
               <div className="wallet-pagination"><span>Page <b>{page}</b> of {pages}</span><span><button type="button" disabled={walletLoading || page <= 1} onClick={() => setPage(value => value - 1)}>← Previous</button><button type="button" disabled={walletLoading || page >= pages} onClick={() => setPage(value => value + 1)}>Next →</button></span></div>
               <div className="wallet-requests"><div className="activity"><b>Your payout requests</b><button type="button" disabled={walletLoading} onClick={() => loadWallet(page)}>Refresh status ↻</button></div>
-                {withdrawals.length === 0 ? <p className="wallet-gate">No payout requests yet. Your request status will appear here.</p> : withdrawals.map(item => <div className="row" key={item.withdrawalId}><i className="row-debit">↗</i><span><b>{item.method.toUpperCase()} · {formatDate(item.requestedAt || item.createdAt)}</b><small>{item.withdrawalId}</small></span><strong>{new Intl.NumberFormat("en-IN", { style: "currency", currency: item.payoutCurrency || "INR", maximumFractionDigits: 2 }).format(item.payoutAmount)} · {item.status}</strong></div>)}
+                {withdrawals.length === 0 ? <p className="wallet-gate">No payout requests yet. Your request status will appear here.</p> : withdrawals.map(item => <div className="row" key={item.withdrawalId}><i className="row-debit">↗</i><span><b>{item.method.toUpperCase()} · {formatDate(item.requestedAt || item.createdAt)}</b><small>{item.withdrawalId}</small>{item.status === "PENDING" && <div>{cancelReviewId === item.withdrawalId ? <><small>Cancel this request and return its VEs to your wallet?</small><button className="button" type="button" disabled={Boolean(cancellingId)} onClick={() => cancelPendingWithdrawal(item.withdrawalId)}>{cancellingId === item.withdrawalId ? "Cancelling…" : "Confirm cancellation"}</button><button className="button" type="button" disabled={Boolean(cancellingId)} onClick={() => setCancelReviewId("")}>Keep request</button></> : <button className="button" type="button" disabled={Boolean(cancellingId)} onClick={() => setCancelReviewId(item.withdrawalId)}>Cancel pending request</button>}</div>}</span><strong>{new Intl.NumberFormat("en-IN", { style: "currency", currency: item.payoutCurrency || "INR", maximumFractionDigits: 2 }).format(item.payoutAmount)} · {item.status}</strong></div>)}
               </div>
               <div className="callout"><b>Ready to redeem?<small>Turn your rewards into something useful.</small></b><a href={dashboardOnly ? "/payout#payout" : "#payout"} className="button lime">Explore payouts &nbsp; →</a></div>
             </>}

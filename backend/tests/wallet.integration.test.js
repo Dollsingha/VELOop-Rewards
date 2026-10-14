@@ -669,3 +669,17 @@ integrationTest("wallet rate limiting returns 429 for repeated requests", async 
   assert.ok(response.headers.get("ratelimit"));
   assert.match(await response.text(), /Too many requests/i);
 });
+
+integrationTest("required wallet indexes can be ensured repeatedly without changing data", async () => {
+  const { ensureWalletIndexes } = await import("../src/config/walletIndexes.js");
+  await ensureWalletIndexes();
+  await ensureWalletIndexes();
+  const withdrawalIndexes = await ids.Withdrawal.collection.indexes();
+  assert.ok(withdrawalIndexes.some(index => index.unique && index.key.userId === 1 && index.key.idempotencyKey === 1));
+  const walletIndexes = await ids.Wallet.collection.indexes();
+  assert.ok(walletIndexes.some(index => index.unique && index.key.userId === 1));
+  const ledgerIndexes = await ids.WalletTransaction.collection.indexes();
+  assert.ok(ledgerIndexes.some(index => index.unique && index.key.transactionId === 1));
+  assert.equal(await ids.User.countDocuments(), 3);
+  assert.equal((await ids.Wallet.findOne({ userId: ids.user })).ves, 10000);
+});

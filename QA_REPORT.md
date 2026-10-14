@@ -41,3 +41,19 @@ The final production React build passed. A separate loopback-only QA server uses
 
 ## Deployment
 Code revision 8d364450a6d2c2803f978934848ea40b7e627b29 deployed successfully to Render. Hosted frontend/backend installs each reported zero vulnerabilities, MongoDB connected to the independent development database, and the API started successfully. Live verification passed: the zero-balance account shows “Need 2,400 more VEs”; Refresh available balance enters the loading state and then restores the authoritative balance/shortfall. The stale home-page 502 recovered after reloading the deployed site. Backend and frontend npm audits also reported 0 vulnerabilities.
+
+## Functional access review
+- Fixed the dashboard sidebar Redeem link to navigate to /payout#payout; it previously pointed at a section not rendered on /dashboard.
+- Added Wallet to desktop/mobile navigation.
+- Added user-owned PENDING cancellation with on-page confirmation, an in-flight guard, refreshed status and wallet/ledger refresh.
+- UI QA confirmed cancellation changed PENDING to CANCELLED, credited 2,400 VEs (20,200 to 22,600), and displayed a reversal ledger row.
+- Daily check-in updated the server-derived streak to one day and disabled a second same-day claim.
+- Signup rejected mismatched passwords, then registered successfully with all five balances at zero.
+- Logout returned to login. Visiting wallet afterward showed a sign-in gate with no balances or transaction data.
+- Removed two body minimum-width rules responsible for overflow at a 320px viewport. Dashboard/payout DOM measurements passed at viewport widths 320, 768 and 1366; scrollWidth equaled clientWidth.
+- Protected admin operations remain role-gated APIs; ordinary members cannot access admin credits or approval.
+
+
+## Final review — 14 October 2026
+The functional-access fixes were reviewed again. Production startup now explicitly creates required user, wallet, ledger, withdrawal, payout, audit, streak and daily-check-in indexes without dropping indexes or modifying records. A regression case verifies repeat initialization, unique constraints and unchanged user/balance data. Final results and deployment evidence follow the last run.
+
