@@ -77,3 +77,15 @@ Final verification: all 38 tests passed; production frontend build passed. Revis
 - Fixed section positioning after asynchronous wallet loads: direct payout navigation now places the payout heading below the sticky navigation (verified local heading top 120px, navigation bottom 76px).
 - Actual browser layout measurements passed for both dashboard and payout at 320, 768 and 1366 viewport widths: clientWidth matched scrollWidth at 305, 753 and 1351 pixels.
 - Visual review caught dark Pending review text in the existing summary card; the new stylesheet explicitly supplies a light foreground. Production frontend build passed. This UI pass does not verify external payment settlement or Google sign-in.
+
+## Full regression review — 15 October 2026
+
+- Re-ran all 38 integration tests: 38 passed, 0 failed, 0 skipped, using `veloop_wallet_test`. Intentional injected persistence failure remained a passing rollback test.
+- Production frontend build passed. npm registry audit returned zero reported vulnerabilities for backend production dependencies and for the frontend dependency tree.
+- Live read-only checks: health 200; unauthenticated wallet, payout methods and admin stats each 401. Owner wallet retained its explicitly requested 5,000 development VEs and labeled ledger credit; this QA did not submit a live withdrawal or alter that balance.
+- Live payout UI: INR 25 / 5,800 VEs correctly disabled submission with an 800 VE shortfall; INR 10 / 2,400 VEs enabled review. Invalid UPI input prevented confirmation. All eight database-configured options appeared.
+- Isolated browser checks: wrong password rejected; correct password signed in; signed-in `/login` redirected to dashboard; logout followed by wallet navigation showed the sign-in gate with no balances/history.
+- Actual isolated double-click withdrawal: 22,600 → 20,200 VEs, one PENDING request/receipt. Cancellation returned 2,400 VEs.
+- Found and fixed a stale receipt defect: after cancellation the wallet history changed but the receipt still displayed PENDING. Receipt status/messages now follow refreshed server withdrawal records, including processing, approval, rejection and cancellation. Retest created and cancelled another isolated request: balance returned to 22,600; both history and receipt displayed CANCELLED and the returned-rewards message.
+- Active isolated payout layout checks at 320, 768 and 1366 viewport widths returned scrollWidth=clientWidth at 305, 753 and 1351 pixels. Viewport override reset afterward.
+- Limits: Google provider sign-in remains unverified/hidden by default. Real UPI collection and bank settlement are not configured. Provider adapter integration tests are mocked, not real transfers. Manual bank settlement, games/exchanges without supplied rules, and a universal claim that all external services work are not part of this verified result.

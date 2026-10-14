@@ -61,6 +61,17 @@ export default function RewardsExperience({ dashboardOnly = false }) {
   const requestInFlight = useRef(false);
   const idempotencyKey = useRef(null);
 
+  useEffect(() => {
+    if (!withdrawalId) return;
+    const latest = withdrawals.find(item => item.withdrawalId === withdrawalId);
+    if (!latest) return;
+    setWithdrawalStatus(latest.status);
+    if (latest.status === "CANCELLED") setPayoutMessage("Your withdrawal request was cancelled. Its VEs have been returned to your wallet.");
+    if (latest.status === "REJECTED") setPayoutMessage("Your withdrawal request was rejected. Its VEs have been returned to your wallet.");
+    if (latest.status === "PROCESSING") setPayoutMessage("Your withdrawal request is being reviewed.");
+    if (latest.status === "APPROVED") setPayoutMessage("Your withdrawal request was approved internally. This is not confirmation of a bank transfer.");
+  }, [withdrawals, withdrawalId]);
+
   // Position the destination after async wallet content has established its
   // height; scrolling before it loads can land above the payout section.
   useEffect(() => {
