@@ -69,3 +69,7 @@ The integration suite requires the local Docker Compose MongoDB replica set to b
 ## Expanded QA regression run
 37 passed, 0 failed, 0 skipped on 13 October 2026. Added last-balance simultaneous duplicate requests, changed-detail idempotency conflicts, manual status guards, invalid/expired JWT, password/role checks, user-scoped pagination and HTTP 429 protection. See QA_REPORT.md for the defect fix and actual UI ledger verification.
 
+
+## Final verification — 14 October 2026
+38 passed, 0 failed, 0 skipped. Added repeatable required index initialization. The frontend build and hosted deployment succeeded. See QA_REPORT.md for member UI, cancellation/reversal, signup/logout, responsive layout and live endpoint checks. External Google/bank-provider success is not claimed.
+

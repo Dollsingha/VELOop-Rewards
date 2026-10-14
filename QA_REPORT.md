@@ -1,8 +1,8 @@
-# Wallet assessment QA — 13 October 2026
+# Wallet assessment QA — 14 October 2026
 
 ## Automated result
 
-37 integration tests passed, 0 failed, 0 skipped after the concurrent duplicate fix. Tests exercise real Express/Mongoose operations in the separate local `veloop_wallet_test` replica-set database.
+38 integration tests passed, 0 failed, 0 skipped after the final index/startup review. Tests exercise real Express/Mongoose operations in the separate local `veloop_wallet_test` replica-set database.
 
 | Assignment condition | Result |
 | --- | --- |
@@ -57,3 +57,5 @@ Code revision 8d364450a6d2c2803f978934848ea40b7e627b29 deployed successfully to 
 ## Final review — 14 October 2026
 The functional-access fixes were reviewed again. Production startup now explicitly creates required user, wallet, ledger, withdrawal, payout, audit, streak and daily-check-in indexes without dropping indexes or modifying records. A regression case verifies repeat initialization, unique constraints and unchanged user/balance data. Final results and deployment evidence follow the last run.
 
+
+Final verification: all 38 tests passed; production frontend build passed. Revision 9df422a89170f76a0d92fbec653cade215ddb96f is Live on Render. Both hosted package installs reported 0 vulnerabilities; startup connected to the development database and served the API after required index creation. Public health returned 200; unauthenticated wallet/payout methods returned 401. Live dashboard sidebar Redeem navigated to /payout#payout; live Wallet navigation is present. At a 320px live viewport the full eight-option payout page measured scrollWidth=clientWidth=305, without horizontal overflow. Google provider sign-in and real bank settlement remain outside the verified flow.
